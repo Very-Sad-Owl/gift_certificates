@@ -1,0 +1,62 @@
+plugins {
+    id 'war'
+    id 'java'
+    id 'maven-publish'
+    id "io.freefair.lombok" version "5.3.0"
+    id "org.flywaydb.flyway" version "8.5.0"
+    id 'org.springframework.boot' version '2.4.5'
+    id 'com.github.akazver.mapstruct' version '1.0.1'
+}
+
+group = "ru.clevertec.ecl"
+version = '1.0-SNAPSHOT'
+description = 'gift_certificates'
+sourceCompatibility = JavaVersion.VERSION_1_8
+
+repositories {
+    mavenLocal()
+    maven {
+        url = uri('https://repo.maven.apache.org/maven2/')
+    }
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web:2.6.6'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa:2.6.6'
+
+    implementation group: 'org.yaml', name: 'snakeyaml', version: '1.21'
+
+    compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.8'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    implementation group: 'org.postgresql', name: 'postgresql', version: '42.3.2'
+
+    annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+    // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:2.6.6'
+
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+flyway {
+    locations = ['filesystem:db/migration']
+    url = 'jdbc:postgresql://localhost:5432/certificate'
+    user = 'postgres'
+    password = 'Osamu_720290'
+    driver = 'org.postgresql.Driver'
+}
+
+flywayMigrate.dependsOn classes
+classes.finalizedBy flywayMigrate
+
