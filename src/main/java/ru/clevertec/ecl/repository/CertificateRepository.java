@@ -8,11 +8,13 @@ import org.springframework.stereotype.Repository;
 import ru.clevertec.ecl.entity.Certificate;
 import ru.clevertec.ecl.entity.Tag;
 
-import java.util.List;
+import java.util.Collection;
+import java.util.Set;
 
 @Repository
 public interface CertificateRepository extends CommonRepository<Certificate> {
-    List<Certificate> findByTagsContains(Tag tag);
+    Page<Certificate> findByTagsContains(Tag tag, Pageable pageable);
+    Page<Certificate> findByTagsIn(Set<Tag> tags, Pageable pageable);
 
 //    @Query(value = "select * from gift_certificate " +
 //            "where POSITION(%:description% in gift_certificate.description) != 0 ", nativeQuery = true)

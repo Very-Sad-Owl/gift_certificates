@@ -1,5 +1,6 @@
 package ru.clevertec.ecl.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import ru.clevertec.ecl.entity.Certificate;
 
@@ -9,16 +10,23 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, exclude = "certificates")
 @ToString(callSuper = true)
 public class TagDto extends AbstractModel {
     private String name;
-    private Set<CertificateDto> certificates;
+//    @JsonIgnore
+//    private Set<CertificateDto> certificates;
+
+//    @Builder
+//    public TagDto(long id, String name, Set<CertificateDto> certificates) {
+//        super(id);
+//        this.name = name;
+//        this.certificates = certificates;
+//    }
 
     @Builder
-    public TagDto(long id, String name, Set<CertificateDto> certificates) {
+    public TagDto(long id, String name) {
         super(id);
         this.name = name;
-        this.certificates = certificates;
     }
 }

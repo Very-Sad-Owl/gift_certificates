@@ -1,18 +1,21 @@
 package ru.clevertec.ecl.entity;
 
 import lombok.*;
+import org.hibernate.annotations.DynamicUpdate;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
 @Entity
+@DynamicUpdate
 @Setter
 @Getter
 @NoArgsConstructor
 @ToString(callSuper = true)
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = false)
 @Table(name = "gift_certificate")
 public class Certificate extends AbstractEntity{
 
@@ -46,12 +49,14 @@ public class Certificate extends AbstractEntity{
     private LocalDateTime lastUpdateDate;
 
     @ToString.Exclude
-    @ManyToMany(cascade = {CascadeType.DETACH, CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.MERGE})
+//    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.DETACH, CascadeType.REFRESH, CascadeType.MERGE})
+//    @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
+    @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.REFRESH})
     @JoinTable(
             name = "certificate_tag",
             joinColumns = @JoinColumn(name = "certificate_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "tag_id", referencedColumnName = "id")
     )
-    private Set<Tag> tags;
+    private Set<Tag> tags = new LinkedHashSet<>();
 
 }

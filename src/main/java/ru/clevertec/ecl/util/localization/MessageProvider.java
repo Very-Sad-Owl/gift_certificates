@@ -24,12 +24,7 @@ public class MessageProvider {
         ResourceBundle.clearCache();
         ResourceBundle rb = ResourceBundle.getBundle(BUNDLE_BASE_TITLE, locale);
         messages.put(NotFoundException.class.getSimpleName(), rb.getString(MessagesLocaleNames.NOT_FOUND_MSG));
-        messages.put(BillNotFoundException.class.getSimpleName(), rb.getString(MessagesLocaleNames.NOT_FOUND_BILL_MSG));
-        messages.put(CardNotFoundException.class.getSimpleName(), rb.getString(MessagesLocaleNames.NOT_FOUND_CARD_MSG));
-        messages.put(CashierNotFoundException.class.getSimpleName(), rb.getString(MessagesLocaleNames.NOT_FOUND_CASHIER_MSG));
-        messages.put(ProductNotFoundException.class.getSimpleName(), rb.getString(MessagesLocaleNames.NOT_FOUND_PRODUCT_MSG));
-        messages.put(ProductDiscountNotFoundException.class.getSimpleName(), rb.getString(MessagesLocaleNames.NOT_FOUND_PRODUCT_DISCOUNT_MSG));
-        messages.put(CardTypeNotFoundException.class.getSimpleName(), rb.getString(MessagesLocaleNames.NOT_FOUND_CARD_TYPE_MSG));
+        messages.put(CertificateNotFoundException.class.getSimpleName(), rb.getString(MessagesLocaleNames.NOT_FOUND_BILL_MSG));
         messages.put(SavingException.class.getSimpleName(), rb.getString(MessagesLocaleNames.SAVING_MSG));
         messages.put(UpdatingException.class.getSimpleName(), rb.getString(MessagesLocaleNames.UPDATING_MSG));
         messages.put(DeletionException.class.getSimpleName(), rb.getString(MessagesLocaleNames.DELETING_MSG));

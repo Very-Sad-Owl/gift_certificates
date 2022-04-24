@@ -39,7 +39,7 @@ public class CertificateController {
 
     @GetMapping(value = ACTION_LOG, produces = {MediaType.APPLICATION_JSON_VALUE})
     @ResponseStatus(HttpStatus.OK)
-    public Page<CertificateDto> log(Pageable pageable, CertificateParamsDto params) {
+    public Page<CertificateDto> log(Pageable pageable, CertificateDto params) {
         return certificateService.getAll(params, pageable);
     }
 
@@ -48,12 +48,12 @@ public class CertificateController {
     public CertificateDto find(@RequestParam Integer id) {
         return certificateService.findById(id);
     }
-//
-//    @PostMapping(value = ACTION_SAVE, produces = {MediaType.APPLICATION_JSON_VALUE})
-//    @ResponseStatus(HttpStatus.CREATED)
-//    public Certificate save(@RequestBody ProductParamsDto params) {
-//        return certificateService.save(params);
-//    }
+
+    @PostMapping(value = ACTION_SAVE, produces = {MediaType.APPLICATION_JSON_VALUE})
+    @ResponseStatus(HttpStatus.CREATED)
+    public CertificateDto save(@RequestBody CertificateDto params) {
+        return certificateService.save(params);
+    }
 //
 //    @PatchMapping(value = ACTION_PATCH, produces = {MediaType.APPLICATION_JSON_VALUE})
 //    @ResponseStatus(HttpStatus.OK)
