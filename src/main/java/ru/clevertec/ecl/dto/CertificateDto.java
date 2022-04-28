@@ -1,6 +1,8 @@
 package ru.clevertec.ecl.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import ru.clevertec.ecl.entity.Tag;
 
 import javax.persistence.*;
@@ -9,6 +11,7 @@ import java.util.Set;
 
 @Data
 @NoArgsConstructor
+@SuperBuilder
 @EqualsAndHashCode(callSuper = true, exclude = {"lastUpdateDate", "createDate", "filteringTag"})
 @ToString(callSuper = true)
 public class CertificateDto extends AbstractModel {
@@ -19,19 +22,6 @@ public class CertificateDto extends AbstractModel {
     private LocalDateTime createDate;
     private LocalDateTime lastUpdateDate;
     private Set<TagDto> tags;
-
-    private String filteringTag;
-
-    @Builder
-    public CertificateDto(long id, String name, String description, double price, Integer duration, LocalDateTime createDate, LocalDateTime lastUpdateDate, Set<TagDto> tags, String filteringTag) {
-        super(id);
-        this.name = name;
-        this.description = description;
-        this.price = price;
-        this.duration = duration;
-        this.createDate = createDate;
-        this.lastUpdateDate = lastUpdateDate;
-        this.tags = tags;
-        this.filteringTag = filteringTag;
-    }
+    @JsonIgnore
+    private Set<String> filteringTags;
 }

@@ -9,27 +9,26 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import ru.clevertec.ecl.dto.CertificateDto;
-import ru.clevertec.ecl.dto.CertificateParamsDto;
-import ru.clevertec.ecl.entity.Certificate;
-import ru.clevertec.ecl.service.CertificateService;
+import ru.clevertec.ecl.dto.TagDto;
+import ru.clevertec.ecl.dto.UserDto;
+import ru.clevertec.ecl.service.TagService;
 
-import java.util.List;
 import java.util.Locale;
 
 import static ru.clevertec.ecl.util.Constant.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/certificates")
-public class CertificateController {
+@RequestMapping("/tags")
+public class TagController {
 
     private final MessageSource messageSource;
-    private final CertificateService certificateService;
+    private final TagService tagService;
 
     @Autowired
-    public CertificateController(MessageSource messageSource, CertificateService certificateService) {
+    public TagController(MessageSource messageSource, TagService tagService) {
         this.messageSource = messageSource;
-        this.certificateService = certificateService;
+        this.tagService = tagService;
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -39,33 +38,32 @@ public class CertificateController {
 
     @GetMapping(value = ACTION_LOG, produces = {MediaType.APPLICATION_JSON_VALUE})
     @ResponseStatus(HttpStatus.OK)
-    public Page<CertificateDto> log(Pageable pageable, CertificateDto params) {
-        return certificateService.getAll(params, pageable);
+    public Page<TagDto> log(Pageable pageable, TagDto params) {
+        return tagService.getAll(params, pageable);
     }
 
     @GetMapping(value = ACTION_FIND, produces = {MediaType.APPLICATION_JSON_VALUE})
     @ResponseStatus(HttpStatus.OK)
-    public CertificateDto find(@RequestParam Integer id) {
-        return certificateService.findById(id);
+    public TagDto find(@RequestParam Integer id) {
+        return tagService.findById(id);
     }
 
     @PostMapping(value = ACTION_SAVE, produces = {MediaType.APPLICATION_JSON_VALUE})
     @ResponseStatus(HttpStatus.CREATED)
-    public CertificateDto save(@RequestBody CertificateDto params) {
-        return certificateService.save(params);
+    public TagDto save(@RequestBody TagDto params) {
+        return tagService.save(params);
     }
 
     @PatchMapping(value = ACTION_PATCH, produces = {MediaType.APPLICATION_JSON_VALUE})
     @ResponseStatus(HttpStatus.OK)
-    public CertificateDto patch(@RequestBody CertificateDto params) {
-        return certificateService.update(params);
+    public TagDto patch(@RequestBody TagDto params) {
+        return tagService.update(params);
     }
 
     @DeleteMapping(ACTION_DELETE)
     @ResponseStatus(HttpStatus.OK)
     public void delete(@RequestParam Integer id) {
-        certificateService.delete(id);
+        tagService.delete(id);
     }
-
     //localhost:8080/certificates/log?name=asc&price=desc&tag_name='100% power'&part_of_name=happy&part_of_descr=for
 }

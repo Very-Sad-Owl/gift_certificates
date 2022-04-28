@@ -1,6 +1,7 @@
 package ru.clevertec.ecl.entity;
 
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.DynamicUpdate;
 
 import javax.persistence.*;
@@ -14,22 +15,11 @@ import java.util.Set;
 @Setter
 @Getter
 @NoArgsConstructor
+@SuperBuilder
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = false)
 @Table(name = "gift_certificate")
 public class Certificate extends AbstractEntity{
-
-    @Builder
-    public Certificate(long id, String name, String description, double price, Integer duration, LocalDateTime createDate, LocalDateTime lastUpdateDate, Set<Tag> tags) {
-        super(id);
-        this.name = name;
-        this.description = description;
-        this.price = price;
-        this.duration = duration;
-        this.createDate = createDate;
-        this.lastUpdateDate = lastUpdateDate;
-        this.tags = tags;
-    }
 
     @Column(nullable = false)
     private String name;
@@ -49,8 +39,6 @@ public class Certificate extends AbstractEntity{
     private LocalDateTime lastUpdateDate;
 
     @ToString.Exclude
-//    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.DETACH, CascadeType.REFRESH, CascadeType.MERGE})
-//    @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
     @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.REFRESH})
     @JoinTable(
             name = "certificate_tag",

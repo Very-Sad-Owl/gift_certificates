@@ -167,7 +167,7 @@ class CertificateServiceImplTest {
         List<CertificateDto> expected = Arrays.asList(exampleTwo, exampleThree);
 
         List<CertificateDto> actual = service.getAll(CertificateDto.builder()
-                        .filteringTag("holiday")
+                        .filteringTags(new HashSet<>(Arrays.asList("holiday")))
                         .build(),
                 PageRequest.of(0, 10, Sort.by(Sort.Order.asc("id")))).getContent();
 
@@ -179,7 +179,7 @@ class CertificateServiceImplTest {
         List<CertificateDto> expected = new ArrayList<>();
 
         List<CertificateDto> actual = service.getAll(CertificateDto.builder()
-                        .filteringTag("xd")
+                        .filteringTags(new HashSet<>(Arrays.asList("xd")))
                         .build(),
                 PageRequest.of(0, 10)).getContent();
 

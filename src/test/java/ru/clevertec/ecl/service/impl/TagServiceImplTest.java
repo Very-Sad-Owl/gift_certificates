@@ -28,8 +28,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
 
 @ActiveProfiles("test")
 @TestPropertySource("classpath:application-test.yml")

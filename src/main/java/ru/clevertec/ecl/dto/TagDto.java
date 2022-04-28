@@ -2,6 +2,7 @@ package ru.clevertec.ecl.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import ru.clevertec.ecl.entity.Certificate;
 
 import javax.persistence.*;
@@ -9,8 +10,8 @@ import java.util.Set;
 
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
-@EqualsAndHashCode(callSuper = true, exclude = "certificates")
+@SuperBuilder
+@EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public class TagDto extends AbstractModel {
     private String name;
@@ -23,10 +24,4 @@ public class TagDto extends AbstractModel {
 //        this.name = name;
 //        this.certificates = certificates;
 //    }
-
-    @Builder
-    public TagDto(long id, String name) {
-        super(id);
-        this.name = name;
-    }
 }

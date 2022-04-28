@@ -17,10 +17,13 @@ import ru.clevertec.ecl.exception.crud.notfound.TagNotFoundException;
 import ru.clevertec.ecl.mapper.TagMapper;
 import ru.clevertec.ecl.repository.TagRepository;
 import ru.clevertec.ecl.service.TagService;
-import ru.clevertec.ecl.util.matcherhelper.TagMatcherBuilder;
+import ru.clevertec.ecl.util.matcherhelper.MatcherBuilder;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -29,12 +32,10 @@ public class TagServiceImpl
         implements TagService {
 
     private TagMapper mapper;
-    private TagMatcherBuilder matcherBuilder;
 
-    public TagServiceImpl(TagRepository repository, TagMapper mapper, TagMatcherBuilder matcherBuilder) {
-        super(repository);
+    public TagServiceImpl(TagRepository repository, TagMapper mapper, MatcherBuilder<TagDto> matcherBuilder) {
+        super(repository, matcherBuilder);
         this.mapper = mapper;
-        this.matcherBuilder = matcherBuilder;
     }
 
     @Override
@@ -54,14 +55,13 @@ public class TagServiceImpl
     }
 
     @Override
+    public Set<TagDto> findByNames(Collection<String> names) {
+        return repository.findByNameIn(names).stream().map(mapper::tagToDto).collect(Collectors.toSet());
+    }
+
+    @Override
     public Page<TagDto> getAll(TagDto params, Pageable pageable) {
-        List<String> requiredFilters = matcherBuilder.getRequiredFilters(params);
-        if (!requiredFilters.isEmpty()) {
-            ExampleMatcher example = matcherBuilder.buildMatcher(requiredFilters, params);
-            return repository.findAll(Example.of(mapper.dtoToTag(params), example), pageable).map(mapper::tagToDto);
-        } else {
-            return repository.findAll(pageable).map(mapper::tagToDto);
-        }
+        return repository.findAll(pageable).map(mapper::tagToDto);
     }
 
     @Override
@@ -89,7 +89,8 @@ public class TagServiceImpl
 
     @Override
     public Optional<TagDto> findByName(String name) {
-        return repository.findByName(name).map(mapper::tagToDto);
+        return null;
+//        return repository.findByName(name).map(mapper::tagToDto);
     }
 
     @Override

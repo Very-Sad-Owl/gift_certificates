@@ -3,6 +3,7 @@ package ru.clevertec.ecl.util.matcherhelper;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import org.springframework.data.domain.ExampleMatcher;
+import org.springframework.stereotype.Component;
 import ru.clevertec.ecl.dto.AbstractModel;
 import ru.clevertec.ecl.exception.crud.UndefinedException;
 
@@ -11,12 +12,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+@Component
 @NoArgsConstructor
-public abstract class MatcherBuilder<T extends AbstractModel> {
+public class MatcherBuilder<T extends AbstractModel> {
 
-    protected List<String> excludedFieldNames;
-
-    public List<String> getAllFilters(T propertySourceObj) {
+    private List<String> getAllFilters(T propertySourceObj) {
         List<String> filters = new ArrayList<>();
         Object value;
         Class clazz = propertySourceObj.getClass();
@@ -38,11 +38,16 @@ public abstract class MatcherBuilder<T extends AbstractModel> {
         return filters;
     }
 
-    public abstract ExampleMatcher buildMatcher(List<String> required, T o);
-    public abstract List<String> getRequiredFilters(T propertySourceObj);
-    protected abstract void configurePermanentlyIgnoredFields();
+    public ExampleMatcher buildMatcher(T o) {
+        ExampleMatcher filterMatcher = ExampleMatcher.matchingAll();
+        List<String> filterNames = getAllFilters(o);
+        for (String filter : filterNames) {
+            filterMatcher.withMatcher(filter, matcher -> matcher.contains().ignoreCase());
+        }
+        return filterMatcher;
+    }
 
-    protected static boolean isObjectNullOrDefault(Object v, Field field) {
+    private static boolean isObjectNullOrDefault(Object v, Field field) {
         Class<?> t = field.getType();
         if (boolean.class.equals(t)) {
             return Boolean.FALSE.equals(v);
@@ -55,13 +60,22 @@ public abstract class MatcherBuilder<T extends AbstractModel> {
         }
     }
 
-    protected static List<String> getFieldNames(Object o) {
-        List<String> names = new ArrayList<>();
-        Class<?> c = o.getClass();
-        Field[] fields = c.getDeclaredFields();
-        for (Field field : fields) {
-            names.add(field.getName());
+    public boolean isEmpty(T o) {
+        List<Object> notNullFields = new ArrayList<>();
+        try {
+            Object value;
+            for (Field field : o.getClass().getDeclaredFields()) {
+                String fieldName = field.getName();
+                field.setAccessible(true);
+                value = field.get(o);
+                if (!isObjectNullOrDefault(value, field)) {
+                    notNullFields.add(value);
+                }
+            }
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
         }
-        return names;
+        return notNullFields.isEmpty();
     }
+
 }

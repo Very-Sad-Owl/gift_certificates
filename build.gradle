@@ -3,7 +3,6 @@ plugins {
     id 'java'
     id 'maven-publish'
     id "io.freefair.lombok" version "5.3.0"
-    id "org.flywaydb.flyway" version "8.5.0"
     id 'org.springframework.boot' version '2.6.6'
     id "io.spring.dependency-management" version "1.0.8.RELEASE"
     id 'com.github.akazver.mapstruct' version '1.0.1'
@@ -27,6 +26,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa:2.6.6'
     implementation 'com.h2database:h2:2.1.210'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
 
     compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.8'
     annotationProcessor 'org.projectlombok:lombok'
@@ -70,14 +70,4 @@ test {
     useJUnitPlatform()
 }
 
-flyway {
-    locations = ['filesystem:db/migration']
-    url = 'jdbc:postgresql://localhost:5432/certificate'
-    user = 'postgres'
-    password = 'Osamu_720290'
-    driver = 'org.postgresql.Driver'
-}
-
-flywayMigrate.dependsOn classes
-classes.finalizedBy flywayMigrate
 

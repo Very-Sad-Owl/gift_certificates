@@ -1,6 +1,7 @@
 package ru.clevertec.ecl.service.impl;
 
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.*;
@@ -16,7 +17,6 @@ import ru.clevertec.ecl.mapper.TagMapper;
 import ru.clevertec.ecl.repository.CertificateRepository;
 import ru.clevertec.ecl.entity.Certificate;
 import ru.clevertec.ecl.service.CertificateService;
-import ru.clevertec.ecl.util.matcherhelper.CertificateMatcherBuilder;
 import ru.clevertec.ecl.util.matcherhelper.MatcherBuilder;
 
 import java.time.LocalDateTime;
@@ -31,19 +31,17 @@ public class CertificateServiceImpl
     private CertificateMapper mapper;
     private TagMapper tagMapper;
     private TagServiceImpl tagServiceImpl;
-    private CertificateMatcherBuilder matcherBuilder;
 
     @Autowired
-    public CertificateServiceImpl(CertificateRepository repository, CertificateMapper mapper, TagMapper tagMapper, TagServiceImpl tagServiceImpl, CertificateMatcherBuilder matcherBuilder) {
-        super(repository);
+    public CertificateServiceImpl(CertificateRepository repository, MatcherBuilder<CertificateDto> filter, CertificateMapper mapper, TagMapper tagMapper, TagServiceImpl tagServiceImpl) {
+        super(repository, filter);
         this.mapper = mapper;
         this.tagMapper = tagMapper;
         this.tagServiceImpl = tagServiceImpl;
-        this.matcherBuilder = matcherBuilder;
     }
 
-    public CertificateServiceImpl(CertificateRepository repository) {
-        super(repository);
+    public CertificateServiceImpl(CertificateRepository repository, MatcherBuilder<CertificateDto> filter) {
+        super(repository, filter);
     }
 
     @Transactional
@@ -83,20 +81,29 @@ public class CertificateServiceImpl
 
     @Override
     public Page<CertificateDto> getAll(CertificateDto filterCertificate, Pageable pageable) {
+        boolean areAmyFiltersApplied = false;
         Set<CertificateDto> page = new HashSet<>();
-        List<String> requiredFilters = matcherBuilder.getRequiredFilters(filterCertificate);
-        if (!requiredFilters.isEmpty()) {
-            ExampleMatcher example = matcherBuilder.buildMatcher(requiredFilters, filterCertificate);
-            page.addAll(repository.findAll(Example.of(mapper.dtoToCertificate(filterCertificate), example), pageable)
+        if (!filterMatcher.isEmpty(filterCertificate)) {
+            page.addAll(repository.findAll(Example.of(mapper.dtoToCertificate(filterCertificate),
+                            filterMatcher.buildMatcher(filterCertificate)), pageable)
                     .map(mapper::certificateToDto).getContent());
+            areAmyFiltersApplied = true;
         }
-        if (filterCertificate.getFilteringTag() != null) {
-            page.addAll(tagServiceImpl.findByName(filterCertificate.getFilteringTag())
-                    .map(dto -> repository.findByTagsContains(tagMapper.dtoToTag(dto), pageable)
-                            .map(mapper::certificateToDto))
-                    .orElse(Page.empty()).getContent());
+        if (filterCertificate.getFilteringTags() != null) {
+            Set<Tag> tags = tagServiceImpl.findByNames(filterCertificate.getFilteringTags())
+                    .stream()
+                    .map(tagMapper::dtoToTag)
+                    .collect(Collectors.toSet());
+            page.addAll(repository.findByTagsIn(tags, pageable).map(mapper::certificateToDto).getContent());
+            areAmyFiltersApplied = true;
+//            page.addAll(tagServiceImpl.findByName(filterCertificate.getFilteringTag())
+//                    .map(dto -> repository.findByTagsContains(tagMapper.dtoToTag(dto), pageable)
+//                            .map(mapper::certificateToDto))
+//                    .orElse(Page.empty()).getContent());
         }
-        return new PageImpl<>(new ArrayList<>(page), pageable, page.size());
+        return areAmyFiltersApplied
+                ? new PageImpl<>(new ArrayList<>(page), pageable, page.size())
+                : new PageImpl<>(repository.findAll()).map(mapper::certificateToDto);
     }
 
     @Override
@@ -104,7 +111,7 @@ public class CertificateServiceImpl
         try {
             repository.deleteById(id);
         } catch (EmptyResultDataAccessException e) {
-            throw new DeletionException(new CertificateNotFoundException(id+""));
+            throw new DeletionException(new CertificateNotFoundException(id + ""));
         }
     }
 
