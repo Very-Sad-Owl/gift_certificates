@@ -89,8 +89,7 @@ public class TagServiceImpl
 
     @Override
     public Optional<TagDto> findByName(String name) {
-        return null;
-//        return repository.findByName(name).map(mapper::tagToDto);
+        return repository.findByName(name).map(mapper::tagToDto);
     }
 
     @Override
