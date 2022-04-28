@@ -21,10 +21,10 @@ public class User extends AbstractEntity {
     private String login;
     @Column(nullable = false)
     private String surname;
-    @Column(nullable = false)
-    private String encryptedPassword;
-    @Column
-    @Enumerated(EnumType.STRING)
-    private Role role;
+//    @Column(nullable = false)
+//    private String encryptedPassword;
+//    @Column
+//    @Enumerated(EnumType.STRING)
+//    private Role role;
 
 }

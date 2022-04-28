@@ -16,7 +16,7 @@ import javax.persistence.Entity;
 public class UserDto extends AbstractModel {
     private String name;
     private String surname;
-    private String password;
-    private String role;
+//    private String password;
+//    private String role;
 
 }
