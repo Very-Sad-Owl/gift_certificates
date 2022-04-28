@@ -54,7 +54,7 @@ public class TagController {
         return tagService.save(params);
     }
 
-    @PatchMapping(value = ACTION_PATCH, produces = {MediaType.APPLICATION_JSON_VALUE})
+    @PutMapping(value = ACTION_PATCH, produces = {MediaType.APPLICATION_JSON_VALUE})
     @ResponseStatus(HttpStatus.OK)
     public TagDto patch(@RequestBody TagDto params) {
         return tagService.update(params);

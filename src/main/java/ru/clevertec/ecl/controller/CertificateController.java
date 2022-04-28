@@ -55,7 +55,7 @@ public class CertificateController {
         return certificateService.save(params);
     }
 
-    @PatchMapping(value = ACTION_PATCH, produces = {MediaType.APPLICATION_JSON_VALUE})
+    @PutMapping(value = ACTION_PATCH, produces = {MediaType.APPLICATION_JSON_VALUE})
     @ResponseStatus(HttpStatus.OK)
     public CertificateDto patch(@RequestBody CertificateDto params) {
         return certificateService.update(params);

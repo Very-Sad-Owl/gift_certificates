@@ -54,7 +54,7 @@ public class OrderController {
         return orderService.save(params);
     }
 
-    @PatchMapping(value = ACTION_PATCH, produces = {MediaType.APPLICATION_JSON_VALUE})
+    @PutMapping(value = ACTION_PATCH, produces = {MediaType.APPLICATION_JSON_VALUE})
     @ResponseStatus(HttpStatus.OK)
     public OrderDto patch(@RequestBody OrderDto params) {
         return orderService.update(params);
