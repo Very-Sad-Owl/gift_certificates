@@ -1,15 +1,13 @@
 package ru.clevertec.ecl.util.matcherhelper;
 
-import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.stereotype.Component;
 import ru.clevertec.ecl.dto.AbstractModel;
-import ru.clevertec.ecl.exception.crud.UndefinedException;
+import ru.clevertec.ecl.exception.UndefinedException;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @Component
@@ -42,7 +40,7 @@ public class MatcherBuilder<T extends AbstractModel> {
         ExampleMatcher filterMatcher = ExampleMatcher.matchingAll();
         List<String> filterNames = getAllFilters(o);
         for (String filter : filterNames) {
-            filterMatcher.withMatcher(filter, matcher -> matcher.contains().ignoreCase());
+            filterMatcher = filterMatcher.withMatcher(filter, matcher -> matcher.contains().ignoreCase());
         }
         return filterMatcher;
     }
@@ -52,7 +50,7 @@ public class MatcherBuilder<T extends AbstractModel> {
         if (boolean.class.equals(t)) {
             return Boolean.FALSE.equals(v);
         } else if (char.class.equals(t)) {
-            return ((Character) v) != Character.MIN_VALUE;
+            return ((Character) v) == Character.MIN_VALUE;
         } else if (t.isPrimitive()) {
             return ((Number) v).doubleValue() == 0;
         } else {

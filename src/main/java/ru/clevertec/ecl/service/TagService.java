@@ -12,7 +12,8 @@ import java.util.Optional;
 import java.util.Set;
 
 public interface TagService extends CRUDService<TagDto> {
-    Optional<TagDto> findByName(String name);
+    TagDto findByName(String name);
     TagDto getOrSave(TagDto tag);
     Set<TagDto> findByNames(Collection<String> names);
+    TagDto findTopUserMoreCommonTag();
 }

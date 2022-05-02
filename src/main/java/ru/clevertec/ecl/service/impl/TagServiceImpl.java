@@ -10,10 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.clevertec.ecl.dto.TagDto;
 import ru.clevertec.ecl.entity.Tag;
-import ru.clevertec.ecl.exception.crud.DeletionException;
-import ru.clevertec.ecl.exception.crud.SavingException;
-import ru.clevertec.ecl.exception.crud.UpdatingException;
-import ru.clevertec.ecl.exception.crud.notfound.TagNotFoundException;
+import ru.clevertec.ecl.exception.crud.*;
 import ru.clevertec.ecl.mapper.TagMapper;
 import ru.clevertec.ecl.repository.TagRepository;
 import ru.clevertec.ecl.service.TagService;
@@ -43,7 +40,7 @@ public class TagServiceImpl
         try {
             return mapper.tagToDto(repository.save(mapper.dtoToTag(dto)));
         } catch (DataIntegrityViolationException e) {
-            throw new SavingException(e);
+            throw new SavingException(e, dto.getId());
         }
     }
 
@@ -51,12 +48,14 @@ public class TagServiceImpl
     public TagDto findById(long id) {
         return repository.findById(id)
                 .map(value -> mapper.tagToDto(value))
-                .orElseThrow(() -> new TagNotFoundException(id + ""));
+                .orElseThrow(() -> new NotFoundException(id));
     }
 
     @Override
     public Set<TagDto> findByNames(Collection<String> names) {
-        return repository.findByNameIn(names).stream().map(mapper::tagToDto).collect(Collectors.toSet());
+        return repository.findByNameIn(names).stream()
+                .map(mapper::tagToDto)
+                .collect(Collectors.toSet());
     }
 
     @Override
@@ -69,7 +68,7 @@ public class TagServiceImpl
         try {
             repository.deleteById(id);
         } catch (EmptyResultDataAccessException e) {
-            throw new DeletionException(new TagNotFoundException(id + ""));
+            throw new DeletionException(e, id);
         }
     }
 
@@ -77,33 +76,44 @@ public class TagServiceImpl
     public TagDto update(TagDto dto) {
         try {
             repository.findById(dto.getId())
-                    .map(value -> mapper.tagToDto(value))
-                    .orElseThrow(() -> new UpdatingException(new TagNotFoundException(dto.getId() + "")));
+                    .map(value -> mapper.tagToDto(value));
             return mapper.tagToDto(repository.save(mapper.dtoToTag(dto)));
-        } catch (DataIntegrityViolationException e) {
-            throw new UpdatingException(e);
-        } catch (EmptyResultDataAccessException e) {
-            throw new UpdatingException(new TagNotFoundException(dto.getId()+""));
+        } catch (DataIntegrityViolationException | EmptyResultDataAccessException e) {
+            throw new UpdatingException(e, dto.getId());
         }
     }
 
     @Override
-    public Optional<TagDto> findByName(String name) {
-        return repository.findByName(name).map(mapper::tagToDto);
+    public TagDto findByName(String name) {
+        Optional<Tag> tag = repository.findByName(name);
+        if (tag.isPresent()) {
+            return mapper.tagToDto(tag.get());
+        }  else {
+            throw new NoContentException();
+        }
     }
 
     @Override
     @Transactional
     public TagDto getOrSave(TagDto tag) {
-        Optional<TagDto> foundOrSaver = findByName(tag.getName());
-        if (foundOrSaver.isPresent()) {
-            return foundOrSaver.get();
-        } else {
+        try {
+            return findByName(tag.getName());
+        } catch (NoContentException e) {
             try {
                 return save(tag);
-            } catch (DataIntegrityViolationException e) {
-                throw new SavingException(e);
+            } catch (DataIntegrityViolationException de) {
+                throw new SavingException(de, tag.getId());
             }
+        }
+    }
+
+    @Override
+    public TagDto findTopUserMoreCommonTag() {
+        Optional<Tag> tag = repository.findTopUserMoreCommonTag();
+        if (tag.isPresent()) {
+            return mapper.tagToDto(tag.get());
+        }  else {
+            throw new NoContentException();
         }
     }
 }

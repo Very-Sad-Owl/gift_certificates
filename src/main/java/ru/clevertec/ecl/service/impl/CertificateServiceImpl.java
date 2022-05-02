@@ -3,6 +3,7 @@ package ru.clevertec.ecl.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
@@ -11,14 +12,15 @@ import ru.clevertec.ecl.dto.CertificateDto;
 import ru.clevertec.ecl.dto.TagDto;
 import ru.clevertec.ecl.entity.Tag;
 import ru.clevertec.ecl.exception.crud.DeletionException;
-import ru.clevertec.ecl.exception.crud.notfound.CertificateNotFoundException;
+import ru.clevertec.ecl.exception.crud.NotFoundException;
+import ru.clevertec.ecl.exception.crud.SavingException;
+import ru.clevertec.ecl.exception.crud.UpdatingException;
 import ru.clevertec.ecl.mapper.CertificateMapper;
 import ru.clevertec.ecl.mapper.TagMapper;
 import ru.clevertec.ecl.repository.CertificateRepository;
 import ru.clevertec.ecl.entity.Certificate;
 import ru.clevertec.ecl.service.CertificateService;
 import ru.clevertec.ecl.util.matcherhelper.MatcherBuilder;
-
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -46,42 +48,31 @@ public class CertificateServiceImpl
 
     @Transactional
     @Override
-    public CertificateDto save(CertificateDto e) {
-        Set<TagDto> tags = new HashSet<>();
-        for (TagDto el : e.getTags()) {
-//            TagDto tag = tagServiceImpl.getOrSave(el);
-//            tag.getCertificates().add(e);
-//            tags.add(tag);
+    public CertificateDto save(CertificateDto dto) {
+        for (TagDto el : dto.getTags()) {
             el = tagServiceImpl.getOrSave(el);
-//            if (el.getCertificates() != null)
-//                el.getCertificates().add(e);
-//            else
-//                el.setCertificates(new HashSet<>());
         }
-//        for (TagDto el : e.getTags()) {
-////            tags.add(tagServiceImpl.getOrSave(el));
-//            if (el.getCertificates() != null)
-//                el.getCertificates().add(e);
-//            else el.setCertificates(new HashSet<>());
-//        }
-        e.setCreateDate(LocalDateTime.now());
-        e.setLastUpdateDate(LocalDateTime.now());
-        Certificate certificate = repository.save(mapper.dtoToCertificate(e));
-        CertificateDto dto = mapper.certificateToDto(certificate);
-//        dto.setTags(tags);
-        return dto;
+        dto.setCreateDate(LocalDateTime.now());
+        dto.setLastUpdateDate(LocalDateTime.now());
+        try {
+            Certificate certificate = repository.save(mapper.dtoToCertificate(dto));
+            return mapper.certificateToDto(certificate);
+        } catch (DataIntegrityViolationException e) {
+            throw new SavingException(e, dto.getId());
+        }
     }
 
     @Override
     public CertificateDto findById(long id) {
         return repository.findById(id)
                 .map(value -> mapper.certificateToDto(value))
-                .orElseThrow(() -> new CertificateNotFoundException(id + ""));
+                .orElseThrow(() -> new NotFoundException(id));
     }
 
     @Override
     public Page<CertificateDto> getAll(CertificateDto filterCertificate, Pageable pageable) {
         boolean areAmyFiltersApplied = false;
+        ExampleMatcher xd = filterMatcher.buildMatcher(filterCertificate);
         Set<CertificateDto> page = new HashSet<>();
         if (!filterMatcher.isEmpty(filterCertificate)) {
             page.addAll(repository.findAll(Example.of(mapper.dtoToCertificate(filterCertificate),
@@ -96,10 +87,6 @@ public class CertificateServiceImpl
                     .collect(Collectors.toSet());
             page.addAll(repository.findByTagsIn(tags, pageable).map(mapper::certificateToDto).getContent());
             areAmyFiltersApplied = true;
-//            page.addAll(tagServiceImpl.findByName(filterCertificate.getFilteringTag())
-//                    .map(dto -> repository.findByTagsContains(tagMapper.dtoToTag(dto), pageable)
-//                            .map(mapper::certificateToDto))
-//                    .orElse(Page.empty()).getContent());
         }
         return areAmyFiltersApplied
                 ? new PageImpl<>(new ArrayList<>(page), pageable, page.size())
@@ -111,13 +98,17 @@ public class CertificateServiceImpl
         try {
             repository.deleteById(id);
         } catch (EmptyResultDataAccessException e) {
-            throw new DeletionException(new CertificateNotFoundException(id + ""));
+            throw new DeletionException(id);
         }
     }
 
     @Override
     public CertificateDto update(CertificateDto dto) {
-        dto.setLastUpdateDate(LocalDateTime.now());
-        return mapper.certificateToDto(repository.save(mapper.dtoToCertificate(dto)));
+        try {
+            dto.setLastUpdateDate(LocalDateTime.now());
+            return mapper.certificateToDto(repository.save(mapper.dtoToCertificate(dto)));
+        } catch (DataIntegrityViolationException | EmptyResultDataAccessException e) {
+            throw new UpdatingException(e, dto.getId());
+        }
     }
 }

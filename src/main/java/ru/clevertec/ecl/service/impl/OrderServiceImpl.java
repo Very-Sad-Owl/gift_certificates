@@ -11,16 +11,14 @@ import ru.clevertec.ecl.dto.CertificateDto;
 import ru.clevertec.ecl.dto.OrderDto;
 import ru.clevertec.ecl.dto.UserDto;
 import ru.clevertec.ecl.entity.Order;
-import ru.clevertec.ecl.exception.crud.UpdatingException;
-import ru.clevertec.ecl.exception.crud.notfound.NotFoundException;
-import ru.clevertec.ecl.exception.crud.notfound.TagNotFoundException;
+import ru.clevertec.ecl.exception.InvalidArgException;
+import ru.clevertec.ecl.exception.crud.*;
 import ru.clevertec.ecl.mapper.OrderMapper;
 import ru.clevertec.ecl.repository.OrderRepository;
 import ru.clevertec.ecl.service.CertificateService;
 import ru.clevertec.ecl.service.OrderService;
 import ru.clevertec.ecl.service.UserService;
 import ru.clevertec.ecl.util.matcherhelper.MatcherBuilder;
-
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -44,22 +42,31 @@ public class OrderServiceImpl
 
     @Override
     @Transactional
-    public OrderDto save(OrderDto e) {
-        if (e.getCertificateId() != 0) {
-            CertificateDto existing = certificateService.findById(e.getCertificateId());
-            e.setCertificate(existing);
+    public OrderDto save(OrderDto order) {
+        return mapper.orderToDto(repository.save(mapper.dtoToOrder(order)));
+    }
+
+    @Override
+    public OrderDto makeOrder(OrderDto order) {
+        if (order.getCertificateId() != 0) {
+            CertificateDto existing = certificateService.findById(order.getCertificateId());
+            order.setCertificate(existing);
         } else {
-            CertificateDto custom = certificateService.save(e.getCertificate());
-            e.setCertificate(custom);
+            CertificateDto custom = certificateService.save(order.getCertificate());
+            order.setCertificate(custom);
         }
-        if (e.getUserId() == 0) {
-            throw new NotFoundException(); //TODO: validation
+        if (order.getUserId() == 0) {
+            throw new InvalidArgException(); //TODO: validation
         }
-        UserDto user = userService.findById(e.getUserId());
-        e.setUser(user);
-        e.setPurchaseTime(LocalDateTime.now());
-        e.calculatePrice();
-        return mapper.orderToDto(repository.save(mapper.dtoToOrder(e)));
+        try {
+            UserDto user = userService.findById(order.getUserId());
+            order.setUser(user);
+            order.setPurchaseTime(LocalDateTime.now());
+            order.calculatePrice();
+            return mapper.orderToDto(repository.save(mapper.dtoToOrder(order)));
+        } catch (DataIntegrityViolationException e) {
+            throw new SavingException(e, order.getId());
+        }
     }
 
     @Override
@@ -68,7 +75,7 @@ public class OrderServiceImpl
         if (order.isPresent()) {
             return mapper.orderToDto(order.get());
         } else {
-            throw new NotFoundException(id + "");
+            throw new NotFoundException(id);
         }
     }
 
@@ -76,13 +83,18 @@ public class OrderServiceImpl
     public Page<OrderDto> getAll(OrderDto params, Pageable pageable) {
         if (params.getUserId() != 0) {
             return findByUserId(params.getUserId(), pageable);
+        } else {
+            return repository.findAll(pageable).map(mapper::orderToDto);
         }
-        return repository.findAll(pageable).map(mapper::orderToDto);
     }
 
     @Override
     public void delete(long id) {
-        repository.deleteById(id);
+        try {
+            repository.deleteById(id);
+        } catch (EmptyResultDataAccessException e) {
+            throw new DeletionException(id);
+        }
     }
 
     @Override
@@ -90,12 +102,10 @@ public class OrderServiceImpl
         try {
             repository.findById(dto.getId())
                     .map(mapper::orderToDto)
-                    .orElseThrow(() -> new UpdatingException(new TagNotFoundException(dto.getId() + "")));
+                    .orElseThrow(() -> new UpdatingException(dto.getId()));
             return mapper.orderToDto(repository.save(mapper.dtoToOrder(dto)));
-        } catch (DataIntegrityViolationException e) {
-            throw new UpdatingException(e);
-        } catch (EmptyResultDataAccessException e) {
-            throw new UpdatingException(new TagNotFoundException(dto.getId()+""));
+        } catch (DataIntegrityViolationException | EmptyResultDataAccessException e) {
+            throw new UpdatingException(e, dto.getId());
         }
     }
 

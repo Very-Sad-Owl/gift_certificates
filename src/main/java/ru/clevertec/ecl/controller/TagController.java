@@ -8,9 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-import ru.clevertec.ecl.dto.CertificateDto;
 import ru.clevertec.ecl.dto.TagDto;
-import ru.clevertec.ecl.dto.UserDto;
 import ru.clevertec.ecl.service.TagService;
 
 import java.util.Locale;
@@ -36,9 +34,9 @@ public class TagController {
         return messageSource.getMessage("label.guide", null, loc);
     }
 
-    @GetMapping(value = ACTION_LOG, produces = {MediaType.APPLICATION_JSON_VALUE})
+    @GetMapping(value = ACTION_FIND_ALL, produces = {MediaType.APPLICATION_JSON_VALUE})
     @ResponseStatus(HttpStatus.OK)
-    public Page<TagDto> log(Pageable pageable, TagDto params) {
+    public Page<TagDto> findAll(Pageable pageable, TagDto params) {
         return tagService.getAll(params, pageable);
     }
 

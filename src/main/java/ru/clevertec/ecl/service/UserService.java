@@ -9,5 +9,5 @@ import java.util.Optional;
 import java.util.Set;
 
 public interface UserService extends CRUDService<UserDto> {
-    Optional<UserDto> findByName(String name);
+    UserDto findByName(String name);
 }

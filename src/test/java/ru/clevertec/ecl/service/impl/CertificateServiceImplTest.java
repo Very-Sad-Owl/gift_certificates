@@ -1,6 +1,7 @@
 package ru.clevertec.ecl.service.impl;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,8 +40,8 @@ class CertificateServiceImplTest {
     @Autowired
     CertificateService service;
 
-    @BeforeAll
-    static void setUp() {
+    @BeforeEach
+    void setUp() {
         LocalDateTime timeCreatedAndUpdated =
                 LocalDateTime.parse("2022-04-21T00:00", DateTimeFormatter.ISO_LOCAL_DATE_TIME);
         exTagOne = TagDto.builder()

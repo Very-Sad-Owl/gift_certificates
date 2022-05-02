@@ -1,20 +1,16 @@
 package ru.clevertec.ecl.exception.crud;
 
-public class SavingException extends GeneralException {
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-    public SavingException() {
-        super();
+@NoArgsConstructor
+@Getter
+public class SavingException extends CrudException {
+    public SavingException(long causeId) {
+        super(causeId);
     }
 
-    public SavingException(String message) {
-        super(message);
-    }
-
-    public SavingException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public SavingException(Throwable cause) {
-        super(cause);
+    public SavingException(Throwable cause, long causeId) {
+        super(cause, causeId);
     }
 }

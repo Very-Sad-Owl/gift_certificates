@@ -1,20 +1,16 @@
 package ru.clevertec.ecl.exception.crud;
 
-public class DeletionException extends GeneralException {
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-    public DeletionException() {
-        super();
+@NoArgsConstructor
+@Getter
+public class DeletionException extends CrudException {
+    public DeletionException(long causeId) {
+        super(causeId);
     }
 
-    public DeletionException(String message) {
-        super(message);
-    }
-
-    public DeletionException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public DeletionException(Throwable cause) {
-        super(cause);
+    public DeletionException(Throwable cause, long causeId) {
+        super(cause, causeId);
     }
 }

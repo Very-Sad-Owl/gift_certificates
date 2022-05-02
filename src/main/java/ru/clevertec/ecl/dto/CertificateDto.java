@@ -12,7 +12,7 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @SuperBuilder
-@EqualsAndHashCode(callSuper = true, exclude = {"lastUpdateDate", "createDate", "filteringTag"})
+@EqualsAndHashCode(callSuper = true, exclude = {"lastUpdateDate", "createDate", "filteringTags"})
 @ToString(callSuper = true)
 public class CertificateDto extends AbstractModel {
     private String name;

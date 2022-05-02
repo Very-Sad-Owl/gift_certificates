@@ -1,20 +1,16 @@
 package ru.clevertec.ecl.exception.crud;
 
-public class UpdatingException extends GeneralException {
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-    public UpdatingException() {
-        super();
+@NoArgsConstructor
+@Getter
+public class UpdatingException extends CrudException {
+    public UpdatingException(long causeId) {
+        super(causeId);
     }
 
-    public UpdatingException(String message) {
-        super(message);
-    }
-
-    public UpdatingException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public UpdatingException(Throwable cause) {
-        super(cause);
+    public UpdatingException(Throwable cause, long causeId) {
+        super(cause, causeId);
     }
 }

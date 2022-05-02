@@ -9,11 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import ru.clevertec.ecl.dto.CertificateDto;
-import ru.clevertec.ecl.dto.CertificateParamsDto;
-import ru.clevertec.ecl.entity.Certificate;
 import ru.clevertec.ecl.service.CertificateService;
 
-import java.util.List;
 import java.util.Locale;
 
 import static ru.clevertec.ecl.util.Constant.*;
@@ -37,9 +34,9 @@ public class CertificateController {
         return messageSource.getMessage("label.guide", null, loc);
     }
 
-    @GetMapping(value = ACTION_LOG, produces = {MediaType.APPLICATION_JSON_VALUE})
+    @GetMapping(value = ACTION_FIND_ALL, produces = {MediaType.APPLICATION_JSON_VALUE})
     @ResponseStatus(HttpStatus.OK)
-    public Page<CertificateDto> log(Pageable pageable, CertificateDto params) {
+    public Page<CertificateDto> findAll(Pageable pageable, CertificateDto params) {
         return certificateService.getAll(params, pageable);
     }
 
@@ -55,9 +52,9 @@ public class CertificateController {
         return certificateService.save(params);
     }
 
-    @PutMapping(value = ACTION_PATCH, produces = {MediaType.APPLICATION_JSON_VALUE})
+    @PutMapping(value = ACTION_PUT, produces = {MediaType.APPLICATION_JSON_VALUE})
     @ResponseStatus(HttpStatus.OK)
-    public CertificateDto patch(@RequestBody CertificateDto params) {
+    public CertificateDto put(@RequestBody CertificateDto params) {
         return certificateService.update(params);
     }
 

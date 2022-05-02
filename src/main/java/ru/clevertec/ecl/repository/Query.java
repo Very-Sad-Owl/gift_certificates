@@ -1,24 +1,28 @@
 package ru.clevertec.ecl.repository;
 
 public interface Query {
-   String GET_CERTIFICATES = "select distinct certificate_tag.certificate_id, gift_certificate.*, tag.name tag_name " +
-           "from certificate_tag join gift_certificate " +
-           "on certificate_tag.certificate_id = gift_certificate.id " +
-           "join tag " +
-           "on certificate_tag.tag_id = tag.id";
-   String GET_CERTIFICATE_TAGS = "select tag.id, tag.name from certificate_tag " +
-           "join tag " +
-           "on certificate_tag.tag_id = tag.id " +
-           "where certificate_tag.certificate_id = :id";
-
-   String GET_CERTIFICATES_WITH_TAGS = "select * from full_info where certificate_id in " +
+   String TOP_USER_MOST_COMMON_TAG = "select * from tag " +
+           "where id = " +
            "(" +
-           " select distinct certificate_id from full_info " +
-           " {where}" +
-           ")" +
-           "{order}" +
-           "{limit} {offset}";
-
-   //parts
+      //           most widely used user's tag
+                 "select xd.tag_id from " +
+                 "( " +
+      //           tags of this user
+                    "select certificate_tag.tag_id from orders " +
+                    "join ( " +
+         //          user with the highest total orders' price
+                    "select user_id usr, sum(price) total from orders " +
+                    "group by user_id " +
+                    "order by total desc " +
+                    "limit 1 " +
+                 ") sub " +
+                 "on user_id = sub.usr " +
+                 "join certificate_tag " +
+                 "on orders.certificate_id = certificate_tag.certificate_id \n" +
+                 ") xd " +
+              "group by xd.tag_id " +
+              "order by count(xd.tag_id) desc " +
+              "limit 1 " +
+           ") ";
 
 }

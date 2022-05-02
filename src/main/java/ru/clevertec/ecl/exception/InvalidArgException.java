@@ -1,4 +1,6 @@
-package ru.clevertec.ecl.exception.crud;
+package ru.clevertec.ecl.exception;
+
+import ru.clevertec.ecl.exception.crud.GeneralException;
 
 public class InvalidArgException extends GeneralException {
 

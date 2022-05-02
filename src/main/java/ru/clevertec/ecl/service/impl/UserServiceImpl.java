@@ -6,7 +6,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.clevertec.ecl.dto.UserDto;
 import ru.clevertec.ecl.entity.User;
-import ru.clevertec.ecl.exception.crud.notfound.NotFoundException;
+import ru.clevertec.ecl.exception.crud.NoContentException;
+import ru.clevertec.ecl.exception.crud.NotFoundException;
 import ru.clevertec.ecl.mapper.UserMapper;
 import ru.clevertec.ecl.repository.UserRepository;
 import ru.clevertec.ecl.service.UserService;
@@ -39,7 +40,7 @@ public class UserServiceImpl
         if (user.isPresent()) {
             return mapper.userToDto(user.get());
         } else {
-            throw new NotFoundException(id+"");
+            throw new NotFoundException(id);
         }
     }
 
@@ -59,7 +60,12 @@ public class UserServiceImpl
     }
 
     @Override
-    public Optional<UserDto> findByName(String name) {
-        return Optional.empty();
+    public UserDto findByName(String name) {
+        Optional<User> user = repository.findByLogin(name);
+        if (user.isPresent()) {
+            return mapper.userToDto(user.get());
+        } else {
+            throw new NoContentException();
+        }
     }
 }

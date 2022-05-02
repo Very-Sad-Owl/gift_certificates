@@ -10,15 +10,9 @@ public interface Constant {
 
     //actions
     String ACTION_FIND = "/find";
-    String ACTION_LOG = "/log";
+    String ACTION_FIND_ALL = "/findAll";
     String ACTION_PUT = "/put";
     String ACTION_PATCH = "/patch";
     String ACTION_SAVE = "/save";
     String ACTION_DELETE = "/delete";
-
-    String CACHE_ALG = "cache.algorithm";
-    String CACHE_CAPACITY = "cache.capacity";
-
-    String FILENAME_PDF_FORMAT = "%s-%s.pdf";
-
 }

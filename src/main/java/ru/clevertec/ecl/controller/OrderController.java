@@ -9,8 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import ru.clevertec.ecl.dto.OrderDto;
-import ru.clevertec.ecl.dto.TagDto;
-import ru.clevertec.ecl.dto.UserDto;
 import ru.clevertec.ecl.service.OrderService;
 
 import java.util.Locale;
@@ -36,9 +34,9 @@ public class OrderController {
         return messageSource.getMessage("label.guide", null, loc);
     }
 
-    @GetMapping(value = ACTION_LOG, produces = {MediaType.APPLICATION_JSON_VALUE})
+    @GetMapping(value = ACTION_FIND_ALL, produces = {MediaType.APPLICATION_JSON_VALUE})
     @ResponseStatus(HttpStatus.OK)
-    public Page<OrderDto> log(Pageable pageable, OrderDto params) {
+    public Page<OrderDto> findAll(Pageable pageable, OrderDto params) {
         return orderService.getAll(params, pageable);
     }
 
