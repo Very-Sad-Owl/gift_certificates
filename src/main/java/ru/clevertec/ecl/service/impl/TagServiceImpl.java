@@ -1,23 +1,18 @@
 package ru.clevertec.ecl.service.impl;
 
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.clevertec.ecl.dto.TagDto;
 import ru.clevertec.ecl.entity.Tag;
-import ru.clevertec.ecl.exception.crud.*;
+import ru.clevertec.ecl.exception.NotFoundException;
 import ru.clevertec.ecl.mapper.TagMapper;
 import ru.clevertec.ecl.repository.TagRepository;
 import ru.clevertec.ecl.service.TagService;
 import ru.clevertec.ecl.util.matcherhelper.MatcherBuilder;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -37,11 +32,7 @@ public class TagServiceImpl
 
     @Override
     public TagDto save(TagDto dto) {
-        try {
-            return mapper.tagToDto(repository.save(mapper.dtoToTag(dto)));
-        } catch (DataIntegrityViolationException e) {
-            throw new SavingException(e, dto.getId());
-        }
+        return mapper.tagToDto(repository.save(mapper.dtoToTag(dto)));
     }
 
     @Override
@@ -65,55 +56,38 @@ public class TagServiceImpl
 
     @Override
     public void delete(long id) {
-        try {
-            repository.deleteById(id);
-        } catch (EmptyResultDataAccessException e) {
-            throw new DeletionException(e, id);
-        }
+        repository.deleteById(id);
     }
 
     @Override
     public TagDto update(TagDto dto) {
-        try {
-            repository.findById(dto.getId())
-                    .map(value -> mapper.tagToDto(value));
-            return mapper.tagToDto(repository.save(mapper.dtoToTag(dto)));
-        } catch (DataIntegrityViolationException | EmptyResultDataAccessException e) {
-            throw new UpdatingException(e, dto.getId());
-        }
+        return repository.findById(dto.getId())
+                .map(found -> mapper.tagToDto(repository.save(mapper.dtoToTag(dto))))
+                .orElseThrow(NotFoundException::new);
+
     }
 
     @Override
     public TagDto findByName(String name) {
-        Optional<Tag> tag = repository.findByName(name);
-        if (tag.isPresent()) {
-            return mapper.tagToDto(tag.get());
-        }  else {
-            throw new NoContentException();
-        }
+        return repository.findByName(name)
+                .map(mapper::tagToDto)
+                .orElseThrow(NotFoundException::new);
     }
 
     @Override
     @Transactional
-    public TagDto getOrSave(TagDto tag) {
-        try {
-            return findByName(tag.getName());
-        } catch (NoContentException e) {
-            try {
-                return save(tag);
-            } catch (DataIntegrityViolationException de) {
-                throw new SavingException(de, tag.getId());
-            }
-        }
+    public TagDto getOrSaveIfExists(TagDto tag) {
+        return repository.findByName(tag.getName())
+                .map(mapper::tagToDto)
+                .orElseGet(() ->
+                        mapper.tagToDto(repository.save(mapper.dtoToTag(tag))))
+                ;
     }
 
     @Override
     public TagDto findTopUserMoreCommonTag() {
-        Optional<Tag> tag = repository.findTopUserMoreCommonTag();
-        if (tag.isPresent()) {
-            return mapper.tagToDto(tag.get());
-        }  else {
-            throw new NoContentException();
-        }
+        return repository.findTopUserMoreCommonTag()
+                .map(mapper::tagToDto)
+                .orElseThrow(NotFoundException::new);
     }
 }

@@ -5,6 +5,7 @@ import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.DynamicUpdate;
 
 import javax.persistence.*;
+import javax.validation.constraints.*;
 import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -21,24 +22,35 @@ import java.util.Set;
 @Table(name = "gift_certificate")
 public class Certificate extends AbstractEntity{
 
+    @NotBlank
     @Column(nullable = false)
     private String name;
 
+    @NotBlank
     private String description;
 
+    @Positive
+    @Digits(integer = 4, fraction = 2)
+    @NotNull
     @Column(nullable = false)
     private double price;
 
+    @Min(1)
+    @NotNull
     @Column(nullable = false)
     private Integer duration;
 
+    @NotNull
     @Column(nullable = false)
     private LocalDateTime createDate;
 
+    @NotNull
     @Column(nullable = false)
     private LocalDateTime lastUpdateDate;
 
+    @NotNull
     @ToString.Exclude
+    @Builder.Default
     @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.REFRESH})
     @JoinTable(
             name = "certificate_tag",

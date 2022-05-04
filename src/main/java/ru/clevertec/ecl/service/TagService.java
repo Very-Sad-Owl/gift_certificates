@@ -13,7 +13,7 @@ import java.util.Set;
 
 public interface TagService extends CRUDService<TagDto> {
     TagDto findByName(String name);
-    TagDto getOrSave(TagDto tag);
+    TagDto getOrSaveIfExists(TagDto tag);
     Set<TagDto> findByNames(Collection<String> names);
     TagDto findTopUserMoreCommonTag();
 }

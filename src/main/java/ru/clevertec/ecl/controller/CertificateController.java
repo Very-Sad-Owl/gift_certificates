@@ -52,7 +52,7 @@ public class CertificateController {
         return certificateService.save(params);
     }
 
-    @PutMapping(value = ACTION_PUT, produces = {MediaType.APPLICATION_JSON_VALUE})
+    @PostMapping(value = ACTION_UPDATE, produces = {MediaType.APPLICATION_JSON_VALUE})
     @ResponseStatus(HttpStatus.OK)
     public CertificateDto put(@RequestBody CertificateDto params) {
         return certificateService.update(params);

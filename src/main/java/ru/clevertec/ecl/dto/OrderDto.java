@@ -9,6 +9,10 @@ import ru.clevertec.ecl.entity.Certificate;
 import ru.clevertec.ecl.entity.User;
 
 import javax.persistence.*;
+import javax.validation.constraints.DecimalMin;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
@@ -18,7 +22,6 @@ import java.time.LocalDateTime;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = false)
 public class OrderDto extends AbstractModel {
-
     private double price;
     private LocalDateTime purchaseTime;
     private CertificateDto certificate;

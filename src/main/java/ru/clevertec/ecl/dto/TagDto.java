@@ -6,6 +6,7 @@ import lombok.experimental.SuperBuilder;
 import ru.clevertec.ecl.entity.Certificate;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
 import java.util.Set;
 
 @Data
@@ -15,13 +16,4 @@ import java.util.Set;
 @ToString(callSuper = true)
 public class TagDto extends AbstractModel {
     private String name;
-//    @JsonIgnore
-//    private Set<CertificateDto> certificates;
-
-//    @Builder
-//    public TagDto(long id, String name, Set<CertificateDto> certificates) {
-//        super(id);
-//        this.name = name;
-//        this.certificates = certificates;
-//    }
 }

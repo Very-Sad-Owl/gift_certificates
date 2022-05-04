@@ -9,6 +9,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
@@ -16,12 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.clevertec.ecl.App;
 import ru.clevertec.ecl.dto.CertificateDto;
 import ru.clevertec.ecl.dto.TagDto;
+import ru.clevertec.ecl.exception.NotFoundException;
 import ru.clevertec.ecl.exception.UnsupportedFilterException;
-import ru.clevertec.ecl.exception.crud.DeletionException;
-import ru.clevertec.ecl.exception.crud.SavingException;
-import ru.clevertec.ecl.exception.crud.UpdatingException;
-import ru.clevertec.ecl.exception.crud.notfound.TagNotFoundException;
-import ru.clevertec.ecl.repository.TagRepository;
 import ru.clevertec.ecl.service.TagService;
 
 import java.util.Arrays;
@@ -74,12 +71,12 @@ class TagServiceImplTest {
 
     @Test
     void save_newTagWithExistingName_savingException() {
-        SavingException thrown = assertThrows(
-                SavingException.class,
+        DataIntegrityViolationException thrown = assertThrows(
+                DataIntegrityViolationException.class,
                 () -> service.save(duplicateTag)
         );
 
-        assertSame(thrown.getCause().getClass(), DataIntegrityViolationException.class);
+        assertSame(thrown.getClass(), DataIntegrityViolationException.class);
     }
 
     @Test
@@ -95,13 +92,12 @@ class TagServiceImplTest {
     void findById_nonExistingId_notFoundException() {
         long id = 0;
 
-        TagNotFoundException thrown = assertThrows(
-                TagNotFoundException.class,
-                () -> service.findById(id),
-                id+""
+        NotFoundException thrown = assertThrows(
+                NotFoundException.class,
+                () -> service.findById(id)
         );
 
-        assertTrue(thrown.getMessage().contains(id+""));
+        assertSame(thrown.getClass(), NotFoundException.class);
     }
 
     @Test
@@ -134,12 +130,11 @@ class TagServiceImplTest {
     @Test
     void delete_nonExistingId_exception() {
         long id = 0;
-        DeletionException thrown = assertThrows(
-                DeletionException.class,
-                () -> service.delete(id),
-                id+""
+        EmptyResultDataAccessException thrown = assertThrows(
+                EmptyResultDataAccessException.class,
+                () -> service.delete(id)
         );
-        assertTrue(thrown.getCause().getMessage().contains(id+""));
+        assertSame(thrown.getClass(), EmptyResultDataAccessException.class);
     }
 
     @Test
@@ -157,11 +152,11 @@ class TagServiceImplTest {
     @Test
     void update_nonExistingOrigin_updateException() {
         TagDto tagWithNonExistingId = TagDto.builder().id(0).name("any").build();
-        UpdatingException thrown = assertThrows(
-                UpdatingException.class,
+        NotFoundException thrown = assertThrows(
+                NotFoundException.class,
                 () -> service.update(tagWithNonExistingId)
         );
-        assertTrue(thrown.getCause().getMessage().contains(tagWithNonExistingId.getId()+""));
+        assertEquals(0, thrown.getCauseId());
     }
 
     @Test
@@ -170,7 +165,7 @@ class TagServiceImplTest {
 
         TagDto expected = exTagTwo;
 
-        TagDto actual = service.findByName(name).get();
+        TagDto actual = service.findByName(name);
 
         assertEquals(expected, actual);
     }
@@ -179,24 +174,13 @@ class TagServiceImplTest {
     void findByName_noSuchTag_null() {
         String name = "xd";
 
-        Optional<TagDto> actual = service.findByName(name);
+        NotFoundException thrown = assertThrows(
+                NotFoundException.class,
+                () -> service.findByName(name)
+        );
 
-        assertFalse(actual.isPresent());
+        assertNotNull(thrown);
     }
-
-//    @Test
-//    void getOrSave_birthdayTag_get() {
-//        TagRepository repository = Mockito.mock(TagRepository.class);
-//        service.getOrSave(exTagOne);
-//        Mockito.verify(repository, times(1)).findByName(any());
-//    }
-//
-//    @Test
-//    void getOrSave_newTag_save() {
-//        TagRepository repository = Mockito.mock(TagRepository.class);
-//        service.getOrSave(newTag);
-//        Mockito.verify(repository, times(1)).save(any());
-//    }
 
     private static TagDto exTagOne;
     private static TagDto exTagTwo;

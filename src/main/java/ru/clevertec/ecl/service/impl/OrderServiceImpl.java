@@ -1,8 +1,6 @@
 package ru.clevertec.ecl.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -11,14 +9,14 @@ import ru.clevertec.ecl.dto.CertificateDto;
 import ru.clevertec.ecl.dto.OrderDto;
 import ru.clevertec.ecl.dto.UserDto;
 import ru.clevertec.ecl.entity.Order;
-import ru.clevertec.ecl.exception.InvalidArgException;
-import ru.clevertec.ecl.exception.crud.*;
+import ru.clevertec.ecl.exception.NotFoundException;
 import ru.clevertec.ecl.mapper.OrderMapper;
 import ru.clevertec.ecl.repository.OrderRepository;
 import ru.clevertec.ecl.service.CertificateService;
 import ru.clevertec.ecl.service.OrderService;
 import ru.clevertec.ecl.service.UserService;
 import ru.clevertec.ecl.util.matcherhelper.MatcherBuilder;
+
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -55,58 +53,38 @@ public class OrderServiceImpl
             CertificateDto custom = certificateService.save(order.getCertificate());
             order.setCertificate(custom);
         }
-        if (order.getUserId() == 0) {
-            throw new InvalidArgException(); //TODO: validation
-        }
-        try {
-            UserDto user = userService.findById(order.getUserId());
-            order.setUser(user);
-            order.setPurchaseTime(LocalDateTime.now());
-            order.calculatePrice();
-            return mapper.orderToDto(repository.save(mapper.dtoToOrder(order)));
-        } catch (DataIntegrityViolationException e) {
-            throw new SavingException(e, order.getId());
-        }
+
+        UserDto user = userService.findById(order.getUserId());
+        order.setUser(user);
+        order.setPurchaseTime(LocalDateTime.now());
+        order.calculatePrice();
+        return mapper.orderToDto(repository.save(mapper.dtoToOrder(order)));
     }
 
     @Override
     public OrderDto findById(long id) {
-        Optional<Order> order = repository.findById(id);
-        if (order.isPresent()) {
-            return mapper.orderToDto(order.get());
-        } else {
-            throw new NotFoundException(id);
-        }
+        return repository.findById(id)
+                .map(mapper::orderToDto)
+                .orElseThrow(() -> new NotFoundException(id));
     }
 
     @Override
     public Page<OrderDto> getAll(OrderDto params, Pageable pageable) {
-        if (params.getUserId() != 0) {
-            return findByUserId(params.getUserId(), pageable);
-        } else {
-            return repository.findAll(pageable).map(mapper::orderToDto);
-        }
+        return repository.findAll(pageable).map(mapper::orderToDto);
+
     }
 
     @Override
     public void delete(long id) {
-        try {
-            repository.deleteById(id);
-        } catch (EmptyResultDataAccessException e) {
-            throw new DeletionException(id);
-        }
+        repository.deleteById(id);
     }
 
     @Override
     public OrderDto update(OrderDto dto) {
-        try {
-            repository.findById(dto.getId())
-                    .map(mapper::orderToDto)
-                    .orElseThrow(() -> new UpdatingException(dto.getId()));
-            return mapper.orderToDto(repository.save(mapper.dtoToOrder(dto)));
-        } catch (DataIntegrityViolationException | EmptyResultDataAccessException e) {
-            throw new UpdatingException(e, dto.getId());
-        }
+        return repository.findById(dto.getId())
+                .map(found ->
+                        mapper.orderToDto(repository.save(found)))
+                .orElseThrow(NotFoundException::new);
     }
 
     @Override

@@ -6,6 +6,7 @@ import lombok.experimental.SuperBuilder;
 import ru.clevertec.ecl.entity.Tag;
 
 import javax.persistence.*;
+import javax.validation.constraints.Min;
 import java.time.LocalDateTime;
 import java.util.Set;
 

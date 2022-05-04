@@ -1,20 +1,15 @@
 package ru.clevertec.ecl.service.impl;
 
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import ru.clevertec.ecl.dto.CertificateDto;
 import ru.clevertec.ecl.dto.TagDto;
 import ru.clevertec.ecl.entity.Tag;
-import ru.clevertec.ecl.exception.crud.DeletionException;
-import ru.clevertec.ecl.exception.crud.NotFoundException;
-import ru.clevertec.ecl.exception.crud.SavingException;
-import ru.clevertec.ecl.exception.crud.UpdatingException;
+import ru.clevertec.ecl.exception.NotFoundException;
 import ru.clevertec.ecl.mapper.CertificateMapper;
 import ru.clevertec.ecl.mapper.TagMapper;
 import ru.clevertec.ecl.repository.CertificateRepository;
@@ -50,16 +45,12 @@ public class CertificateServiceImpl
     @Override
     public CertificateDto save(CertificateDto dto) {
         for (TagDto el : dto.getTags()) {
-            el = tagServiceImpl.getOrSave(el);
+            el = tagServiceImpl.getOrSaveIfExists(el);
         }
         dto.setCreateDate(LocalDateTime.now());
         dto.setLastUpdateDate(LocalDateTime.now());
-        try {
-            Certificate certificate = repository.save(mapper.dtoToCertificate(dto));
-            return mapper.certificateToDto(certificate);
-        } catch (DataIntegrityViolationException e) {
-            throw new SavingException(e, dto.getId());
-        }
+        Certificate certificate = repository.save(mapper.dtoToCertificate(dto));
+        return mapper.certificateToDto(certificate);
     }
 
     @Override
@@ -95,20 +86,12 @@ public class CertificateServiceImpl
 
     @Override
     public void delete(long id) {
-        try {
-            repository.deleteById(id);
-        } catch (EmptyResultDataAccessException e) {
-            throw new DeletionException(id);
-        }
+        repository.deleteById(id);
     }
 
     @Override
     public CertificateDto update(CertificateDto dto) {
-        try {
-            dto.setLastUpdateDate(LocalDateTime.now());
-            return mapper.certificateToDto(repository.save(mapper.dtoToCertificate(dto)));
-        } catch (DataIntegrityViolationException | EmptyResultDataAccessException e) {
-            throw new UpdatingException(e, dto.getId());
-        }
+        dto.setLastUpdateDate(LocalDateTime.now());
+        return mapper.certificateToDto(repository.save(mapper.dtoToCertificate(dto)));
     }
 }

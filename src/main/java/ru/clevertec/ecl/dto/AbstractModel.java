@@ -3,6 +3,7 @@ package ru.clevertec.ecl.dto;
 import lombok.Data;
 import lombok.experimental.SuperBuilder;
 
+import javax.validation.constraints.Min;
 import java.io.Serializable;
 
 @Data

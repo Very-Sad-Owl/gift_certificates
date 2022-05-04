@@ -5,6 +5,7 @@ import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.DynamicUpdate;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -19,6 +20,7 @@ import java.util.Set;
 @EqualsAndHashCode(exclude = "certificates", callSuper = false)
 public class Tag extends AbstractEntity {
 
+    @NotBlank
     @Column(unique = true, nullable = false)
     private String name;
 }

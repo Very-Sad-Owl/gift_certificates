@@ -1,26 +1,20 @@
 package ru.clevertec.ecl.service.impl;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.SerializationUtils;
 import ru.clevertec.ecl.App;
 import ru.clevertec.ecl.dto.CertificateDto;
-import ru.clevertec.ecl.dto.CertificateParamsDto;
 import ru.clevertec.ecl.dto.TagDto;
-import ru.clevertec.ecl.exception.crud.DeletionException;
-import ru.clevertec.ecl.exception.crud.notfound.CertificateNotFoundException;
+import ru.clevertec.ecl.exception.NotFoundException;
 import ru.clevertec.ecl.service.CertificateService;
 
 import java.time.LocalDateTime;
@@ -121,13 +115,13 @@ class CertificateServiceImplTest {
     void findById_nonExistingId_exc() {
         long id = 0;
 
-        CertificateNotFoundException thrown = assertThrows(
-                CertificateNotFoundException.class,
+        NotFoundException thrown = assertThrows(
+                NotFoundException.class,
                 () -> service.findById(id),
                 id+""
         );
 
-        assertTrue(thrown.getMessage().contains(id+""));
+        assertSame(id, thrown.getCauseId());
     }
 
     @Test
@@ -196,12 +190,12 @@ class CertificateServiceImplTest {
     @Test
     void delete_nonExistingId_exception() {
         long id = 0;
-        DeletionException thrown = assertThrows(
-                DeletionException.class,
+        EmptyResultDataAccessException thrown = assertThrows(
+                EmptyResultDataAccessException.class,
                 () -> service.delete(id),
                 id+""
         );
-        assertTrue(thrown.getCause().getMessage().contains(id+""));
+        assertSame(thrown.getClass(), EmptyResultDataAccessException.class);
     }
 
     @Test
