@@ -17,7 +17,7 @@ import java.util.Set;
 @Entity
 @DynamicUpdate
 @ToString(callSuper = true)
-@EqualsAndHashCode(exclude = "certificates", callSuper = false)
+@EqualsAndHashCode(callSuper = true)
 public class Tag extends AbstractEntity {
 
     @NotBlank

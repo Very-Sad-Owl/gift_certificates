@@ -77,11 +77,17 @@ public class TagServiceImpl
     @Override
     @Transactional
     public TagDto getOrSaveIfExists(TagDto tag) {
-        return repository.findByName(tag.getName())
-                .map(mapper::tagToDto)
-                .orElseGet(() ->
-                        mapper.tagToDto(repository.save(mapper.dtoToTag(tag))))
-                ;
+        Optional<Tag> found = repository.findByName(tag.getName());
+        if (found.isPresent()) {
+            return mapper.tagToDto(found.get());
+        } else {
+            return mapper.tagToDto(repository.save(mapper.dtoToTag(tag)));
+        }
+//        return repository.findByName(tag.getName())
+//                .map(mapper::tagToDto)
+//                .orElseGet(() ->
+//                        mapper.tagToDto(repository.save(mapper.dtoToTag(tag))))
+//                ;
     }
 
     @Override

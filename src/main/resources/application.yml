@@ -1,7 +1,6 @@
 spring:
-
   datasource:
-    url: jdbc:postgresql://localhost:5432/certificate?useSSL=true&serverTimezone=UTC
+    url: jdbc:postgresql://localhost:5432/node${PORT:8080}
     username: postgres
     password: Osamu_720290
     driver-class-name: org.postgresql.Driver
@@ -9,7 +8,21 @@ spring:
     hibernate:
       ddl-auto: update
 
-#pagination:
-#  default:
-#    pageSize: 10
-#    pageNumber: 0
+server:
+  port: ${PORT:8080}
+
+
+cluster:
+  '{ "node8080":8080, 
+     "node8081":8081,
+     "node8082":8082
+   }'
+
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: "*"

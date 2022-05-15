@@ -45,7 +45,7 @@ public class CertificateServiceImpl
     @Override
     public CertificateDto save(CertificateDto dto) {
         for (TagDto el : dto.getTags()) {
-            el = tagServiceImpl.getOrSaveIfExists(el);
+            el.setId(tagServiceImpl.getOrSaveIfExists(el).getId());
         }
         dto.setCreateDate(LocalDateTime.now());
         dto.setLastUpdateDate(LocalDateTime.now());

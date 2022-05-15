@@ -18,7 +18,7 @@ import java.util.Set;
 @NoArgsConstructor
 @SuperBuilder
 @ToString(callSuper = true)
-@EqualsAndHashCode(callSuper = false)
+@EqualsAndHashCode(callSuper = true)
 @Table(name = "gift_certificate")
 public class Certificate extends AbstractEntity{
 
