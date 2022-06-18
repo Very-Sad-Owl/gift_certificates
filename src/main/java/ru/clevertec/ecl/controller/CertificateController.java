@@ -1,5 +1,6 @@
 package ru.clevertec.ecl.controller;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
@@ -17,17 +18,12 @@ import static ru.clevertec.ecl.util.Constant.*;
 
 @Slf4j
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/certificates")
 public class CertificateController {
 
     private final MessageSource messageSource;
     private final CertificateService certificateService;
-
-    @Autowired
-    public CertificateController(MessageSource messageSource, CertificateService certificateService) {
-        this.messageSource = messageSource;
-        this.certificateService = certificateService;
-    }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public String welcome(Locale loc) {
@@ -42,7 +38,7 @@ public class CertificateController {
 
     @GetMapping(value = ACTION_FIND, produces = {MediaType.APPLICATION_JSON_VALUE})
     @ResponseStatus(HttpStatus.OK)
-    public CertificateDto find(@RequestParam Integer id) {
+    public CertificateDto find(@RequestParam Integer id) { //TODO: name
         return certificateService.findById(id);
     }
 
@@ -54,8 +50,8 @@ public class CertificateController {
 
     @PostMapping(value = ACTION_UPDATE, produces = {MediaType.APPLICATION_JSON_VALUE})
     @ResponseStatus(HttpStatus.OK)
-    public CertificateDto put(@RequestBody CertificateDto params) {
-        return certificateService.update(params);
+    public CertificateDto put(@RequestBody CertificateDto body) { //TODO:
+        return certificateService.update(body);
     }
 
     @DeleteMapping(ACTION_DELETE)
@@ -64,5 +60,4 @@ public class CertificateController {
         certificateService.delete(id);
     }
 
-    //localhost:8080/certificates/log?name=asc&price=desc&tag_name='100% power'&part_of_name=happy&part_of_descr=for
 }

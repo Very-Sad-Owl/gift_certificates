@@ -63,5 +63,4 @@ public class TagController {
     public void delete(@RequestParam Integer id) {
         tagService.delete(id);
     }
-    //localhost:8080/certificates/log?name=asc&price=desc&tag_name='100% power'&part_of_name=happy&part_of_descr=for
 }

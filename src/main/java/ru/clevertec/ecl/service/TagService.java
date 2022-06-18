@@ -16,4 +16,7 @@ public interface TagService extends CRUDService<TagDto> {
     TagDto getOrSaveIfExists(TagDto tag);
     Set<TagDto> findByNames(Collection<String> names);
     TagDto findTopUserMoreCommonTag();
+    long getSequenceNextVal();
+    long getSequenceCurrVal();
+    void updateSequence(long val);
 }

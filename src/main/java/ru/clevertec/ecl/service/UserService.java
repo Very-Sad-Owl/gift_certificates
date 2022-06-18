@@ -10,4 +10,7 @@ import java.util.Set;
 
 public interface UserService extends CRUDService<UserDto> {
     UserDto findByName(String name);
+    long getSequenceNextVal();
+    long getSequenceCurrVal();
+    void updateSequence(long val);
 }

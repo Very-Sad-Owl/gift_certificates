@@ -1,4 +1,4 @@
-package ru.clevertec.ecl.repository;
+package ru.clevertec.ecl.repository.entityrepository;
 
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 
-import static ru.clevertec.ecl.repository.Query.TOP_USER_MOST_COMMON_TAG;
+import static ru.clevertec.ecl.repository.UsedQuery.TOP_USER_MOST_COMMON_TAG;
 
 @Repository
 public interface TagRepository extends CommonRepository<Tag> {

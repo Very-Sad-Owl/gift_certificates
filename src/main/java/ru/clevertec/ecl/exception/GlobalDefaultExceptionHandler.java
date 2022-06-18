@@ -43,6 +43,18 @@ public class GlobalDefaultExceptionHandler extends ResponseEntityExceptionHandle
         return createResponseEntity(HttpStatus.NOT_FOUND, msg, e);
     }
 
+    @ExceptionHandler(ServerIsDownException.class)
+    public ResponseEntity<?> nodeDownHandler(ServerIsDownException e, Locale locale) {
+        String msg = messageProvider.getMessage("error.node_is_down", null, locale);
+        return createResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR, msg, e);
+    }
+
+    @ExceptionHandler(BadConstraintException.class)
+    public ResponseEntity<?> badConstraintHandler(BadConstraintException e, Locale locale) {
+        String msg = messageProvider.getMessage("error.bad_constraint", null, locale);
+        return createResponseEntity(HttpStatus.BAD_REQUEST, msg, e);
+    }
+
     @ExceptionHandler(EmptyResultDataAccessException.class)
     public ResponseEntity<?> emptyResultHandler(DataIntegrityViolationException e, Locale locale) {
         String msg = messageProvider.getMessage("error.not_found", null, locale);

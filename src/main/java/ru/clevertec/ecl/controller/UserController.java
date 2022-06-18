@@ -29,11 +29,6 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public String welcome(Locale loc) {
-        return messageSource.getMessage("label.guide", null, loc);
-    }
-
     @GetMapping(value = ACTION_FIND_ALL, produces = {MediaType.APPLICATION_JSON_VALUE})
     @ResponseStatus(HttpStatus.OK)
     public Page<UserDto> findAll(Pageable pageable, UserDto params) {
@@ -42,10 +37,7 @@ public class UserController {
 
     @GetMapping(value = ACTION_FIND, produces = {MediaType.APPLICATION_JSON_VALUE})
     @ResponseStatus(HttpStatus.OK)
-    public UserDto find(@RequestParam Integer id) {
+    public UserDto find(@RequestParam Long id) {
         return userService.findById(id);
     }
-
-
-    //localhost:8080/certificates/log?name=asc&price=desc&tag_name='100% power'&part_of_name=happy&part_of_descr=for
 }

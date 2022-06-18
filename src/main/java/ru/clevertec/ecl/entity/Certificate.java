@@ -22,6 +22,19 @@ import java.util.Set;
 @Table(name = "gift_certificate")
 public class Certificate extends AbstractEntity{
 
+    @Id
+    @GeneratedValue(
+            strategy = GenerationType.SEQUENCE,
+            generator = "seq_cert"
+    )
+    @SequenceGenerator(
+            name = "seq_cert",
+            sequenceName="seq_cert",
+            allocationSize = 1,
+            initialValue = 1
+    )
+    private long id;
+
     @NotBlank
     @Column(nullable = false)
     private String name;

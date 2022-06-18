@@ -3,12 +3,12 @@ package ru.clevertec.ecl.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import ru.clevertec.ecl.dto.OrderDto;
+import ru.clevertec.ecl.dto.SequenceDto;
 import ru.clevertec.ecl.service.OrderService;
 
 import java.util.Locale;
@@ -34,12 +34,6 @@ public class OrderController {
         return messageSource.getMessage("label.guide", null, loc);
     }
 
-    @GetMapping(value = ACTION_FIND_ALL, produces = {MediaType.APPLICATION_JSON_VALUE})
-    @ResponseStatus(HttpStatus.OK)
-    public Page<OrderDto> findAll(Pageable pageable, OrderDto params) {
-        return orderService.getAll(params, pageable);
-    }
-
     @GetMapping(value = ACTION_FIND, produces = {MediaType.APPLICATION_JSON_VALUE})
     @ResponseStatus(HttpStatus.OK)
     public OrderDto find(@RequestParam Integer id) {
@@ -48,7 +42,7 @@ public class OrderController {
 
     @PostMapping(value = "/buy", produces = {MediaType.APPLICATION_JSON_VALUE})
     @ResponseStatus(HttpStatus.CREATED)
-    public OrderDto save(@RequestBody OrderDto params) {
+    public OrderDto save(@RequestBody OrderDto params, @RequestParam(required = false, defaultValue = "false") boolean redirected) {
         return orderService.save(params);
     }
 
@@ -64,5 +58,20 @@ public class OrderController {
         orderService.delete(id);
     }
 
-    //localhost:8080/certificates/log?name=asc&price=desc&tag_name='100% power'&part_of_name=happy&part_of_descr=for
+    @GetMapping(value = "/seq/next") //TODO: dlinnoe slovo
+    public long getSeqNextVal() {
+        return orderService.getSequenceNextVal();
+    }
+
+    @GetMapping(value = "/seq/current")
+    public long getSeqCurrVal() {
+        return orderService.getSequenceCurrVal();
+    }
+
+//    @PutMapping(value = "/seq/set", produces = {MediaType.APPLICATION_JSON_VALUE}) //TODO:
+    @PostMapping(value = "/seq/set", produces = {MediaType.APPLICATION_JSON_VALUE})
+    public void setSeqNextVal(@RequestBody SequenceDto sequence) {
+        orderService.updateSequence(sequence.getValue());
+    }
+
 }

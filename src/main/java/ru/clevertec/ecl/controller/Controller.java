@@ -8,8 +8,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.clevertec.ecl.util.health.HealthChecker;
+import ru.clevertec.ecl.util.health.Status;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 @Slf4j
 @RestController
@@ -32,8 +36,8 @@ public class Controller {
     }
 
     @GetMapping(value = "/status", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> healthCheckCluster() {
-        return healthChecker.healthCheckEndpoint();
+    public Collection<Status> healthCheckCluster(@RequestParam(required = false, defaultValue = "0") int port) {
+        return healthChecker.healthCheckEndpoint(port).values();
     }
 
 }

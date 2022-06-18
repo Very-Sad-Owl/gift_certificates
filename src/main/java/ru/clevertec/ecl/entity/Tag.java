@@ -20,6 +20,19 @@ import java.util.Set;
 @EqualsAndHashCode(callSuper = true)
 public class Tag extends AbstractEntity {
 
+    @Id
+    @GeneratedValue(
+            strategy = GenerationType.SEQUENCE,
+            generator = "seq_tag"
+    )
+    @SequenceGenerator(
+            name = "seq_tag",
+            sequenceName="seq_tag",
+            allocationSize = 1,
+            initialValue = 1
+    )
+    private long id;
+
     @NotBlank
     @Column(unique = true, nullable = false)
     private String name;

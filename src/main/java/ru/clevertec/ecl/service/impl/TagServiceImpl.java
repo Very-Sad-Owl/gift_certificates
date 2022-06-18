@@ -8,7 +8,7 @@ import ru.clevertec.ecl.dto.TagDto;
 import ru.clevertec.ecl.entity.Tag;
 import ru.clevertec.ecl.exception.NotFoundException;
 import ru.clevertec.ecl.mapper.TagMapper;
-import ru.clevertec.ecl.repository.TagRepository;
+import ru.clevertec.ecl.repository.entityrepository.TagRepository;
 import ru.clevertec.ecl.service.TagService;
 import ru.clevertec.ecl.util.matcherhelper.MatcherBuilder;
 
@@ -23,7 +23,7 @@ public class TagServiceImpl
         extends AbstractService<TagDto, Tag, TagRepository>
         implements TagService {
 
-    private TagMapper mapper;
+    private final TagMapper mapper;
 
     public TagServiceImpl(TagRepository repository, TagMapper mapper, MatcherBuilder<TagDto> matcherBuilder) {
         super(repository, matcherBuilder);
@@ -81,7 +81,7 @@ public class TagServiceImpl
         if (found.isPresent()) {
             return mapper.tagToDto(found.get());
         } else {
-            return mapper.tagToDto(repository.save(mapper.dtoToTag(tag)));
+            return mapper.tagToDto(repository.save(mapper.dtoToTag(tag))); //TODO
         }
 //        return repository.findByName(tag.getName())
 //                .map(mapper::tagToDto)
@@ -95,5 +95,20 @@ public class TagServiceImpl
         return repository.findTopUserMoreCommonTag()
                 .map(mapper::tagToDto)
                 .orElseThrow(NotFoundException::new);
+    }
+
+    @Override
+    public long getSequenceNextVal() {
+        return repository.getSeqNextVal("node"+currentPort);
+    }
+
+    @Override
+    public void updateSequence(long val) {
+        repository.setSeqVal("node"+currentPort, val);
+    }
+
+    @Override
+    public long getSequenceCurrVal() {
+        return repository.currSeqVal();
     }
 }

@@ -9,5 +9,7 @@ import java.util.Optional;
 
 public interface OrderService extends CRUDService<OrderDto> {
     Page<OrderDto> findByUserId(long id, Pageable pageable);
-    OrderDto makeOrder(OrderDto order);
+    long getSequenceNextVal();
+    long getSequenceCurrVal();
+    void updateSequence(long val);
 }

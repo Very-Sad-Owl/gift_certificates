@@ -1,15 +1,11 @@
-package ru.clevertec.ecl.repository;
+package ru.clevertec.ecl.repository.entityrepository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ru.clevertec.ecl.entity.Certificate;
 import ru.clevertec.ecl.entity.Tag;
 
-import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 
 @Repository

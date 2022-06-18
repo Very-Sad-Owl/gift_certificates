@@ -5,20 +5,19 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.clevertec.ecl.dto.CertificateDto;
 import ru.clevertec.ecl.dto.OrderDto;
-import ru.clevertec.ecl.dto.UserDto;
 import ru.clevertec.ecl.entity.Order;
 import ru.clevertec.ecl.exception.NotFoundException;
+import ru.clevertec.ecl.mapper.CertificateMapper;
 import ru.clevertec.ecl.mapper.OrderMapper;
-import ru.clevertec.ecl.repository.OrderRepository;
+import ru.clevertec.ecl.mapper.UserMapper;
+import ru.clevertec.ecl.repository.entityrepository.OrderRepository;
 import ru.clevertec.ecl.service.CertificateService;
 import ru.clevertec.ecl.service.OrderService;
 import ru.clevertec.ecl.service.UserService;
 import ru.clevertec.ecl.util.matcherhelper.MatcherBuilder;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 
 @Service
@@ -27,13 +26,20 @@ public class OrderServiceImpl
         implements OrderService {
 
     private final OrderMapper mapper;
+    private final CertificateMapper certificateMapper;
+    private final UserMapper userMapper;
     private final CertificateService certificateService;
+    //    private final CertificateRepository certificateRepository;
     private final UserService userService;
+//    private final UserRepository userRepository;
+
 
     @Autowired
-    public OrderServiceImpl(OrderRepository repository, MatcherBuilder<OrderDto> filterMatcher, OrderMapper mapper, CertificateService certificateService, UserService userService) {
+    public OrderServiceImpl(OrderRepository repository, MatcherBuilder<OrderDto> filterMatcher, OrderMapper mapper, CertificateMapper certificateMapper, UserMapper userMapper, CertificateService certificateService, UserService userService) {
         super(repository, filterMatcher);
         this.mapper = mapper;
+        this.certificateMapper = certificateMapper;
+        this.userMapper = userMapper;
         this.certificateService = certificateService;
         this.userService = userService;
     }
@@ -41,24 +47,16 @@ public class OrderServiceImpl
     @Override
     @Transactional
     public OrderDto save(OrderDto order) {
-        return mapper.orderToDto(repository.save(mapper.dtoToOrder(order)));
-    }
-
-    @Override
-    public OrderDto makeOrder(OrderDto order) {
-        if (order.getCertificateId() != 0) {
-            CertificateDto existing = certificateService.findById(order.getCertificateId());
-            order.setCertificate(existing);
-        } else {
-            CertificateDto custom = certificateService.save(order.getCertificate());
-            order.setCertificate(custom);
-        }
-
-        UserDto user = userService.findById(order.getUserId());
-        order.setUser(user);
+//        CertificateDto certificate = certificateService.findById(order.getCertificateId());
+//        UserDto user = userService.findById(order.getUserId());
+//        order.setCertificate(certificate);
+//        order.setUser(user);
         order.setPurchaseTime(LocalDateTime.now());
-        order.calculatePrice();
-        return mapper.orderToDto(repository.save(mapper.dtoToOrder(order)));
+//        order.calculatePrice();
+        order.setPrice(1);
+        OrderDto res = mapper.orderToDto(repository.save(mapper.dtoToOrder(order)));
+        order.setId(res.getId());
+        return order;
     }
 
     @Override
@@ -70,7 +68,13 @@ public class OrderServiceImpl
 
     @Override
     public Page<OrderDto> getAll(OrderDto params, Pageable pageable) {
-        return repository.findAll(pageable).map(mapper::orderToDto);
+        return repository.findAll(pageable)
+                .map(mapper::orderToDto)//TODO:
+                .map(t -> {
+                    t.setCertificate(certificateService.findById(t.getCertificateId()));
+                    t.setUser(userService.findById(t.getUserId()));
+                    return t;
+                });
 
     }
 
@@ -90,6 +94,23 @@ public class OrderServiceImpl
     @Override
     public Page<OrderDto> findByUserId(long id, Pageable pageable) {
         return repository.findByUserId(id, pageable)
-                .map(mapper::orderToDto);
+                .map(t -> mapper.orderToDto(t));
+    }
+
+    @Override
+    public long getSequenceNextVal() {
+        return repository.getSeqNextVal("seq");
+    }
+
+    @Override
+    @Transactional
+    public void updateSequence(long val) {
+        repository.setSeqVal("seq", val);
+    }
+
+    @Override
+    public long getSequenceCurrVal() {
+//        return repository.currSeqVal("seq");
+        return repository.currSeqVal();
     }
 }

@@ -1,12 +1,9 @@
-package ru.clevertec.ecl.repository;
+package ru.clevertec.ecl.repository.entityrepository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import ru.clevertec.ecl.entity.Order;
-import ru.clevertec.ecl.entity.User;
-
-import java.util.Optional;
 
 @Repository
 public interface OrderRepository extends CommonRepository<Order> {

@@ -1,4 +1,4 @@
-package ru.clevertec.ecl.repository;
+package ru.clevertec.ecl.repository.entityrepository;
 
 import org.springframework.stereotype.Repository;
 import ru.clevertec.ecl.entity.User;

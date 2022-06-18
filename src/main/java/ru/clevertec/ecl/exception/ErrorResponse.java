@@ -10,10 +10,10 @@ import java.sql.Timestamp;
 @Builder
 @Getter
 public class ErrorResponse {
-    public Timestamp timeOccurred;
-    public int status;
-    public String errorName;
-    public String errorMsg;
-    public String excName;
+    private Timestamp timeOccurred;
+    private int status;
+    private String errorName;
+    private String errorMsg;
+    private String excName;
 
 }

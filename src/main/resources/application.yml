@@ -1,23 +1,42 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/node${PORT:8080}
-    username: postgres
-    password: Osamu_720290
-    driver-class-name: org.postgresql.Driver
+      orders:
+        url: jdbc:postgresql://localhost:5432/node${PORT}
+        username: postgres
+        password: Osamu_720290
+        driverClassName: org.postgresql.Driver
+      commitlog:
+        url: jdbc:postgresql://localhost:5432/commit_log
+        username: postgres
+        password: Osamu_720290
+        driverClassName: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
+    show-sql: true
+#    generate-ddl: true
+
+#    seconddatasource:
+#      url: jdbc:postgresql://localhost:5432/commot_log
+#      username: postgres
+#      password: Osamu_720290
+#      driver-class-name: org.postgresql.Driver
+#    jpa:
+#      hibernate:
+#        ddl-auto: update
+#      show-sql: true
 
 server:
-  port: ${PORT:8080}
-
-
-cluster:
-  '{ "node8080":8080, 
-     "node8081":8081,
-     "node8082":8082
-   }'
-
+  port: ${PORT}
+  sources_port: 8070, 8080, 8090
+  replicas:
+    8070: 8071, 8072
+    8080: 8081, 8082
+    8090: 8091, 8092
+  cluster:
+    8070: 8070, 8071, 8072
+    8080: 8080, 8081, 8082
+    8090: 8090, 8091, 8092
 management:
   endpoint:
     health:

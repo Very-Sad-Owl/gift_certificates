@@ -8,7 +8,7 @@ import ru.clevertec.ecl.dto.UserDto;
 import ru.clevertec.ecl.entity.User;
 import ru.clevertec.ecl.exception.NotFoundException;
 import ru.clevertec.ecl.mapper.UserMapper;
-import ru.clevertec.ecl.repository.UserRepository;
+import ru.clevertec.ecl.repository.entityrepository.UserRepository;
 import ru.clevertec.ecl.service.UserService;
 import ru.clevertec.ecl.util.matcherhelper.MatcherBuilder;
 
@@ -58,11 +58,20 @@ public class UserServiceImpl
         return repository.findByName(name)
                 .map(mapper::userToDto)
                 .orElseThrow(NotFoundException::new);
-//        Optional<User> user = repository.findByLogin(name);
-//        if (user.isPresent()) {
-//            return repository.findByLogin(name));
-//        } else {
-//            throw new NotFoundException();
-//        }
+    }
+
+    @Override
+    public long getSequenceNextVal() {
+        return repository.getSeqNextVal("node"+currentPort);
+    }
+
+    @Override
+    public void updateSequence(long val) {
+        repository.setSeqVal("node"+currentPort, val);
+    }
+
+    @Override
+    public long getSequenceCurrVal() {
+        return repository.currSeqVal();
     }
 }

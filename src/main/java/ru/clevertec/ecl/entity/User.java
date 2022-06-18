@@ -19,6 +19,19 @@ import javax.validation.constraints.NotBlank;
 @Table(name = "users")
 public class User extends AbstractEntity {
 
+    @Id
+    @GeneratedValue(
+            strategy = GenerationType.SEQUENCE,
+            generator = "seq_user"
+    )
+    @SequenceGenerator(
+            name = "seq_user",
+            sequenceName="seq_user",
+            allocationSize = 1,
+            initialValue = 1
+    )
+    private long id;
+
     @NotBlank
     @Length(min = 2, max = 16)
     @Column(nullable = false)

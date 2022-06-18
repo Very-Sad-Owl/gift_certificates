@@ -5,14 +5,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.annotation.Validated;
 import ru.clevertec.ecl.dto.CertificateDto;
 import ru.clevertec.ecl.dto.TagDto;
 import ru.clevertec.ecl.entity.Tag;
 import ru.clevertec.ecl.exception.NotFoundException;
 import ru.clevertec.ecl.mapper.CertificateMapper;
 import ru.clevertec.ecl.mapper.TagMapper;
-import ru.clevertec.ecl.repository.CertificateRepository;
+import ru.clevertec.ecl.repository.entityrepository.CertificateRepository;
 import ru.clevertec.ecl.entity.Certificate;
 import ru.clevertec.ecl.service.CertificateService;
 import ru.clevertec.ecl.util.matcherhelper.MatcherBuilder;
@@ -81,7 +80,7 @@ public class CertificateServiceImpl
         }
         return areAmyFiltersApplied
                 ? new PageImpl<>(new ArrayList<>(page), pageable, page.size())
-                : new PageImpl<>(repository.findAll()).map(mapper::certificateToDto);
+                : new PageImpl<>(repository.findAll()).map(mapper::certificateToDto); //TODO: to test
     }
 
     @Override
@@ -93,5 +92,20 @@ public class CertificateServiceImpl
     public CertificateDto update(CertificateDto dto) {
         dto.setLastUpdateDate(LocalDateTime.now());
         return mapper.certificateToDto(repository.save(mapper.dtoToCertificate(dto)));
+    }
+
+    @Override
+    public long getSequenceNextVal() {
+        return repository.getSeqNextVal("node"+currentPort);
+    }
+
+    @Override
+    public void updateSequence(long val) {
+        repository.setSeqVal("node"+currentPort, val);
+    }
+
+    @Override
+    public long getSequenceCurrVal() {
+        return repository.currSeqVal();
     }
 }

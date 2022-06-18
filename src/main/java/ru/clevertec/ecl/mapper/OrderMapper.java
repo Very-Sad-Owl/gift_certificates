@@ -1,20 +1,26 @@
 package ru.clevertec.ecl.mapper;
 
-import org.mapstruct.InheritInverseConfiguration;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+import org.mapstruct.*;
 import org.springframework.stereotype.Component;
 import ru.clevertec.ecl.dto.OrderDto;
-import ru.clevertec.ecl.dto.UserDto;
 import ru.clevertec.ecl.entity.Order;
-import ru.clevertec.ecl.entity.User;
 
 @Component
-@Mapper(componentModel = "spring", uses = CertificateMapper.class)
+@Mapper(componentModel = "spring")
 public interface OrderMapper {
-    @Mapping(target = "userId", ignore = true)
-    @Mapping(target = "certificateId", ignore = true)
+
     OrderDto orderToDto(Order order);
-    @InheritInverseConfiguration
     Order dtoToOrder(OrderDto dto);
+
+//    @AfterMapping
+//    default void map( @MappingTarget OrderDto target, Order source ,
+//                      @Context UserService userService,
+//                      @Context CertificateService certificateService) {
+//        try {
+//            target.setUser(userService.findById(source.getUserId()));
+//            target.setCertificate((certificateService.findById(source.getCertificateId())));
+//        } catch (NotFoundException e) {
+//            return;
+//        }
+//    }
 }
