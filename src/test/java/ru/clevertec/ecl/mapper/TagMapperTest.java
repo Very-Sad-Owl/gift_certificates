@@ -7,32 +7,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import ru.clevertec.ecl.dto.TagDto;
-import ru.clevertec.ecl.entity.Tag;
-
-import java.util.HashSet;
+import ru.clevertec.ecl.entity.baseentities.Tag;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@SpringBootTest
 @ExtendWith(SpringExtension.class)
-@EnableAutoConfiguration
+@ContextConfiguration(classes = {TagMapperImpl.class})
 class TagMapperTest {
 
     @Autowired
     private TagMapper mapper;
-
-    @Configuration
-    public static class Config {
-
-        @Bean
-        public TagMapper converterUsingTagMapper() {
-            return Mappers.getMapper(TagMapper.class);
-        }
-    }
 
     @Test
     void tagToDto_equalEntities_equalDtos() {

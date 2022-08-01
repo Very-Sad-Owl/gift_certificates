@@ -1,16 +1,14 @@
 package ru.clevertec.ecl.service;
 
-import ru.clevertec.ecl.dto.TagDto;
 import ru.clevertec.ecl.dto.UserDto;
-import ru.clevertec.ecl.entity.User;
 
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
-
+/**
+ * An interface declaring methods {@link ru.clevertec.ecl.service.impl.UserServiceImpl} must implement.
+ *
+ * See also {@link CRUDService}.
+ *
+ * @author Olga Mailychko
+ *
+ */
 public interface UserService extends CRUDService<UserDto> {
-    UserDto findByName(String name);
-    long getSequenceNextVal();
-    long getSequenceCurrVal();
-    void updateSequence(long val);
 }

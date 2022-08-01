@@ -22,13 +22,21 @@ public interface UsedQuery {
               "limit 1 " +
            ") ";
 
-   String SEQ_NEXT_VAL = "SELECT nextval(:seq)";
-   String SEQ_SET_VAL = "SELECT setval(:seq, :val)";
-   String SEQ_CURR_VAL = "SELECT last_value FROM seq";
-   String DBLINK_CONNECTION = "SELECT dblink_connect('commit_log','host=localhost port=5432 dbname=node8081 user=postgres password=Osamu_720290 options=-csearch_path=')";
-   String SELECT_FROM_COMMIT_LOG = "SELECT * FROM dblink('commit_log', 'SELECT * FROM public.changes') AS t(action text, table_name text, json_object text, id bigint, curr_seq bigint)";
-   String INSERT_INTO_COMMIT_LOG = "SELECT dblink_exec('insert into changes(action, table_name, json_object, curr_seq) values(:action, :table, :json, :seq);')";
-   String PUT_FROM_COMMIT_LOG = "SELECT dblink_exec('update changes set action = :action, table_name = :table, json_object = :json, curr_seq = :seq where curr_seq = :seq);')";
-   String UPDATE_NODE_STATUS = "UPDATE node_statuses SET down_from = :time, node_status = :status where node_title = :node";
-   String GET_NODE_STATUS = "SELECT node_status from node_statuses where node_title = :node";
+   String SEQ_NEXT_VAL = "SELECT nextval(:sequence)";
+   String SEQ_SET_VAL = "SELECT setval(:sequence, :val)";
+   String ORDER_SEQ_CURR_VAL = "SELECT last_value FROM seq";
+   String TAG_SEQ_CURR_VAL = "SELECT last_value FROM seq_tag";
+   String CERTIFICATE_SEQ_CURR_VAL = "SELECT last_value FROM seq_cert";
+   String GET_CERTIFICATES_WITH_TAGS = "select " +
+           "gift_certificate.id, gift_certificate.create_date, " +
+           "gift_certificate.description, gift_certificate.duration, " +
+           "gift_certificate.last_update_date, " +
+           "gift_certificate.name, gift_certificate.price " +
+           "from gift_certificate " +
+           "join certificate_tag " +
+           "on gift_certificate.id = certificate_tag.certificate_id " +
+           "join tag " +
+           "on tag.id = certificate_tag.tag_id " +
+           "where tag.name in (:tags) " +
+           "limit :border";
 }

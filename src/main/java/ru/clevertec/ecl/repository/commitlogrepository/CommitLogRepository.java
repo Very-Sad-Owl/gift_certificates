@@ -1,10 +1,25 @@
 package ru.clevertec.ecl.repository.commitlogrepository;
 
 import org.springframework.stereotype.Repository;
-import ru.clevertec.ecl.entity.commitlogentities.NodeStatus;
+import org.springframework.web.util.ContentCachingRequestWrapper;
+import ru.clevertec.ecl.entity.commitlogentities.CommitLog;
 
+import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
+
+/**
+ * Repository for {@link CommitLog} entity.
+ *
+ * @author Olga Mailychko
+ *
+ */
 @Repository
-public interface CommitLogRepository extends CommonCommitLogRepository<NodeStatus> {
-     NodeStatus findByNodeTitle(String title);
-//    void updateNodeStatusByTitle(@Param("time")LocalDateTime time, @Param("status") boolean status, @Param("node") String node);
+public interface CommitLogRepository extends CommonCommitLogRepository<CommitLog> {
+     List<CommitLog> findAllByActionTimeAfterAndPerformedOnNodeIn(LocalDateTime actionTime, Collection<Integer> performedOnNode);
+
+     List<CommitLog> findAllByActionTimeAfterAndPerformedOnNodeInAndTableTitle
+             (LocalDateTime actionTime, Collection<Integer> performedOnNode, String tableTitle);
+
+     List<CommitLog> findAllByActionTimeAfterAndTableTitle(LocalDateTime actionTime, String tableTitle);
 }

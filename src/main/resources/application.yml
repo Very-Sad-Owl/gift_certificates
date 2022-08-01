@@ -11,24 +11,18 @@ spring:
         password: Osamu_720290
         driverClassName: org.postgresql.Driver
   jpa:
+    defer-datasource-initialization: true
     hibernate:
       ddl-auto: create
     show-sql: true
-#    generate-ddl: true
-
-#    seconddatasource:
-#      url: jdbc:postgresql://localhost:5432/commot_log
-#      username: postgres
-#      password: Osamu_720290
-#      driver-class-name: org.postgresql.Driver
-#    jpa:
-#      hibernate:
-#        ddl-auto: update
-#      show-sql: true
+  sql:
+    init:
+      platform: postgresql
+      mode: always
 
 server:
   port: ${PORT}
-  sources_port: 8070, 8080, 8090
+  sourcesPort: 8070, 8080, 8090
   replicas:
     8070: 8071, 8072
     8080: 8081, 8082
@@ -37,6 +31,7 @@ server:
     8070: 8070, 8071, 8072
     8080: 8080, 8081, 8082
     8090: 8090, 8091, 8092
+
 management:
   endpoint:
     health:
@@ -45,3 +40,4 @@ management:
     web:
       exposure:
         include: "*"
+

@@ -1,27 +1,64 @@
 spring:
-  datasource:
-    url: jdbc:h2:mem:testdb
+#  main:
+#    allow-bean-definition-overriding: true
+  datasource1:
+    jdbcUrl: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=false
     username: sa
     password:
-    driver-class-name: org.h2.Driver
+    driverClassName: org.h2.Driver
+  datasource2:
+    jdbcUrl: jdbc:h2:mem:testdblog;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=false
+    username: sa
+    password:
+    driverClassName: org.h2.Driver
+#    data: classpath:data.sql
 
   h2:
     console:
       enabled: true
       path: /h2
+
+  data:
+    jdbc:
+      repositories:
+        enabled: false
+
   jpa:
     defer-datasource-initialization: true
-#    database-platform: org.hibernate.dialect.PostgreSQL95Dialect
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: update
+#      naming:
+#        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+#        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    generate-ddl: true
   sql:
     init:
       platform: h2
-      data-locations: classpath:data.sql
+#      data-locations: classpath:data.sql
       mode: always
 
-#pagination:
-#  default:
-#    pageSize: 10
-#    pageNumber: 0
+server:
+  port: 8070
+  sourcesPort: 8070, 8080, 8090
+  replicas:
+    8070: 8071, 8072
+    8080: 8081, 8082
+    8090: 8091, 8092
+  cluster:
+    8070: 8070, 8071, 8072
+    8080: 8080, 8081, 8082
+    8090: 8090, 8091, 8092
+
+management:
+  endpoint:
+    health:
+      show-details: always
+      cache:
+        time-to-live: 0
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+

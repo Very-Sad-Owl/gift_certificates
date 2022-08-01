@@ -8,16 +8,21 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import ru.clevertec.ecl.entity.Tag;
 
-import javax.persistence.*;
-import javax.validation.constraints.Min;
 import java.time.LocalDateTime;
 import java.util.Set;
 
+/**
+ * DTO class for transfer {@link ru.clevertec.ecl.entity.baseentities.Certificate} data.
+ *
+ * Transfers entity's field data between controller and repository layers.
+ *
+ * @author Olga Mailychko
+ *
+ */
 @Data
 @NoArgsConstructor
-@SuperBuilder
+@SuperBuilder(toBuilder = true)
 @EqualsAndHashCode(callSuper = true, exclude = {"lastUpdateDate", "createDate", "filteringTags"})
 @ToString(callSuper = true)
 public class CertificateDto extends AbstractModel {

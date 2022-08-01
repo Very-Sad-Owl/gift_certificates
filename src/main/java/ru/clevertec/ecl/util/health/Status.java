@@ -6,6 +6,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Entity containing node's number and ints status.
+ *
+ * @author Olga Mailychko
+ *
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -15,6 +21,8 @@ public class Status {
 
     public Status(JsonNode jsonNode) {
         this.port = jsonNode.get("node").intValue();
-        this.isOk = jsonNode.get("status").textValue().equals("UP");
+        this.isOk = (jsonNode.get("isOK") != null && jsonNode.get("isOK").textValue().equals("true"))
+                || (jsonNode.get("status") != null && jsonNode.get("status").textValue().equals("UP"));
+        System.out.println("");
     }
 }

@@ -2,10 +2,8 @@ package ru.clevertec.ecl.mapper;
 
 import org.mapstruct.*;
 import org.springframework.stereotype.Component;
-import ru.clevertec.ecl.dto.TagDto;
 import ru.clevertec.ecl.dto.UserDto;
-import ru.clevertec.ecl.entity.Tag;
-import ru.clevertec.ecl.entity.User;
+import ru.clevertec.ecl.entity.baseentities.User;
 
 @Component
 @Mapper(componentModel = "spring")

@@ -1,11 +1,15 @@
 package ru.clevertec.ecl.repository.entityrepository;
 
 import org.springframework.stereotype.Repository;
-import ru.clevertec.ecl.entity.User;
+import ru.clevertec.ecl.entity.baseentities.User;
+import ru.clevertec.ecl.entity.commitlogentities.CommitLog;
 
-import java.util.Optional;
-
+/**
+ * Repository for {@link User} entity.
+ *
+ * @author Olga Mailychko
+ *
+ */
 @Repository
 public interface UserRepository extends CommonRepository<User> {
-    Optional<User> findByName(String login);
 }

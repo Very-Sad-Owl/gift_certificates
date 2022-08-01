@@ -4,27 +4,36 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.DynamicUpdate;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
+import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.List;
 
+/**
+ * Entity class for commit log node abstraction.
+ *
+ * See also {@link javax.persistence.Entity}.
+ *
+ * @author Olga Mailychko
+ *
+ */
 @NoArgsConstructor
 @Getter
 @Setter
 @SuperBuilder
 @Entity
 @DynamicUpdate
-public class CommitLog extends AbstractCommitLog {
+@Table(name = "commit_log")
+@EqualsAndHashCode(callSuper = false, exclude = {"actionTime", "performedOnNode"})
+@ToString
+public class CommitLog extends AbstractEntity {
     @Column
     @Enumerated(EnumType.STRING)
     private Action action;
     @Column
     private String tableTitle;
-    @Column
+    @Column(length = 500)
     private String jsonValue;
     @Column
     private LocalDateTime actionTime;
+    @Column
+    private int performedOnNode;
 }

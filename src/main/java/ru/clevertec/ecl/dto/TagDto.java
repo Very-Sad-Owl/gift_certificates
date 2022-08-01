@@ -1,15 +1,16 @@
 package ru.clevertec.ecl.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import ru.clevertec.ecl.entity.Certificate;
 
-import javax.persistence.*;
-import javax.validation.constraints.NotBlank;
-import java.util.Set;
-
+/**
+ * DTO class for transfer {@link ru.clevertec.ecl.entity.baseentities.Tag} data.
+ *
+ * Transfers entity's field data between controller and repository layers.
+ *
+ * @author Olga Mailychko
+ *
+ */
 @Data
 @NoArgsConstructor
 @SuperBuilder

@@ -1,76 +1,110 @@
 package ru.clevertec.ecl.controller;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import ru.clevertec.ecl.dto.OrderDto;
 import ru.clevertec.ecl.dto.SequenceDto;
 import ru.clevertec.ecl.service.OrderService;
 
-import java.util.Locale;
+import static ru.clevertec.ecl.interceptor.common.UrlPaths.*;
 
-import static ru.clevertec.ecl.util.Constant.*;
-
+/**
+ * Controller  class for /orders path
+ *
+ * Provides REST interface for basic CRUD logic operations on {@link ru.clevertec.ecl.entity.baseentities.Order}
+ * entity using {@link ru.clevertec.ecl.dto.OrderDto} as DTO.
+ *
+ * See also {@link org.springframework.web.bind.annotation.RestController}.
+ *
+ * @author Olga Mailychko
+ *
+ */
 @Slf4j
 @RestController
-@RequestMapping("/orders")
+@RequiredArgsConstructor
+@RequestMapping(PATH_ORDERS)
 public class OrderController {
 
-    private final MessageSource messageSource;
+    /**
+     * Service class object to perform corresponding business logic on
+     * {@link ru.clevertec.ecl.entity.baseentities.Order} entities.
+     */
     private final OrderService orderService;
 
-    @Autowired
-    public OrderController(MessageSource messageSource, OrderService orderService) {
-        this.messageSource = messageSource;
-        this.orderService = orderService;
-    }
-
-    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public String welcome(Locale loc) {
-        return messageSource.getMessage("label.guide", null, loc);
-    }
-
-    @GetMapping(value = ACTION_FIND, produces = {MediaType.APPLICATION_JSON_VALUE})
+    /**
+     * Performs {@link ru.clevertec.ecl.entity.baseentities.Order} search by given id.
+     *
+     * @param id required order's id
+     * @return order with given id
+     */
+    @GetMapping(value = ACTION_FIND)
     @ResponseStatus(HttpStatus.OK)
-    public OrderDto find(@RequestParam Integer id) {
+    public OrderDto findOrder(@RequestParam Integer id) {
         return orderService.findById(id);
     }
 
-    @PostMapping(value = "/buy", produces = {MediaType.APPLICATION_JSON_VALUE})
+    /**
+     * Saves new {@link ru.clevertec.ecl.entity.baseentities.Order}.
+     *
+     * @param order order data to be saved
+     * @return saved entity
+     */
+    @PostMapping(value = ACTION_BUY)
     @ResponseStatus(HttpStatus.CREATED)
-    public OrderDto save(@RequestBody OrderDto params, @RequestParam(required = false, defaultValue = "false") boolean redirected) {
-        return orderService.save(params);
+    public OrderDto saveOrder(@RequestBody OrderDto order) {
+        return orderService.save(order);
     }
 
-    @PostMapping(value = ACTION_UPDATE, produces = {MediaType.APPLICATION_JSON_VALUE})
+    /**
+     * Updates existing {@link ru.clevertec.ecl.entity.baseentities.Order}.
+     *
+     * @param order certificate data to be updated
+     * @return updated order entity
+     */
+    @PutMapping(value = ACTION_UPDATE)
     @ResponseStatus(HttpStatus.OK)
-    public OrderDto patch(@RequestBody OrderDto params) {
-        return orderService.update(params);
+    public OrderDto updateOrder(@RequestBody OrderDto order) {
+        return orderService.update(order);
     }
 
+    /**
+     * Removes {@link ru.clevertec.ecl.entity.baseentities.Order} by given id.
+     *
+     * @param id required order's id
+     */
     @DeleteMapping(ACTION_DELETE)
     @ResponseStatus(HttpStatus.OK)
     public void delete(@RequestParam Integer id) {
         orderService.delete(id);
     }
 
-    @GetMapping(value = "/seq/next") //TODO: dlinnoe slovo
-    public long getSeqNextVal() {
+    /**
+     * Method moving order table's sequence to next value.
+     *
+     * @return order sequence's next value
+     */
+    @GetMapping(value = ACTION_MOVE_SEQUENCE)
+    public long getSequenceNextValue() {
         return orderService.getSequenceNextVal();
     }
 
-    @GetMapping(value = "/seq/current")
-    public long getSeqCurrVal() {
+    /**
+     * @return order sequence's current value
+     */
+    @GetMapping(value = ACTION_SEQUENCE_CURRENT)
+    public long getSequenceCurrValue() {
         return orderService.getSequenceCurrVal();
     }
 
-//    @PutMapping(value = "/seq/set", produces = {MediaType.APPLICATION_JSON_VALUE}) //TODO:
-    @PostMapping(value = "/seq/set", produces = {MediaType.APPLICATION_JSON_VALUE})
-    public void setSeqNextVal(@RequestBody SequenceDto sequence) {
+    /**
+     * Method sets order sequence to the specified value.
+     *
+     * @param sequence value sequence must be set on
+     */
+    @PutMapping(value = ACTION_SET_SEQUENCE)
+    public void setSequenceNextValue(@RequestBody SequenceDto sequence) {
         orderService.updateSequence(sequence.getValue());
     }
 

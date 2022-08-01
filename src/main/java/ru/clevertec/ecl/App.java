@@ -13,19 +13,21 @@ import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
+/**
+ * Application's start point containing main() method.
+ *
+ * See also {@link SpringBootApplication}
+ *
+ * @author Olga Mailychko
+ *
+ */
 @SpringBootApplication
 public class App {
 
     public static void main(String[] args) {
         SpringApplication.run(App.class, args);
     }
-
-//    @Bean
-//    public PasswordEncoder passwordEncoder() {
-//        return new BCryptPasswordEncoder();
-//    }
 
     @Bean
     public MessageSource messageSource() {

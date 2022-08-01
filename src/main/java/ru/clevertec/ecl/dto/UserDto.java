@@ -2,14 +2,15 @@ package ru.clevertec.ecl.dto;
 
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.hibernate.annotations.DynamicUpdate;
-import org.hibernate.validator.constraints.Length;
-import ru.clevertec.ecl.entity.AbstractEntity;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.validation.constraints.NotBlank;
-
+/**
+ * DTO class for transfer {@link ru.clevertec.ecl.entity.baseentities.User} data.
+ *
+ * Transfers entity's field data between controller and repository layers.
+ *
+ * @author Olga Mailychko
+ *
+ */
 @Data
 @NoArgsConstructor
 @SuperBuilder
@@ -18,7 +19,5 @@ import javax.validation.constraints.NotBlank;
 public class UserDto extends AbstractModel {
     private String name;
     private String surname;
-//    private String password;
-//    private String role;
 
 }

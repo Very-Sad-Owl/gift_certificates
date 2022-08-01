@@ -1,66 +1,96 @@
 package ru.clevertec.ecl.controller;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import ru.clevertec.ecl.dto.TagDto;
 import ru.clevertec.ecl.service.TagService;
 
-import java.util.Locale;
+import static ru.clevertec.ecl.interceptor.common.UrlPaths.*;
 
-import static ru.clevertec.ecl.util.Constant.*;
-
+/**
+ * Controller  class for /tags path
+ *
+ * Provides REST interface for basic CRUD logic operations on {@link ru.clevertec.ecl.entity.baseentities.Tag}
+ * entity using {@link ru.clevertec.ecl.dto.TagDto} as DTO.
+ *
+ * See also {@link org.springframework.web.bind.annotation.RestController}.
+ *
+ * @author Olga Mailychko
+ *
+ */
 @Slf4j
 @RestController
-@RequestMapping("/tags")
+@RequiredArgsConstructor
+@RequestMapping(PATH_TAGS)
 public class TagController {
 
-    private final MessageSource messageSource;
+    /**
+     * Service class object to perform corresponding business logic on
+     * {@link ru.clevertec.ecl.entity.baseentities.Tag} entities.
+     */
     private final TagService tagService;
 
-    @Autowired
-    public TagController(MessageSource messageSource, TagService tagService) {
-        this.messageSource = messageSource;
-        this.tagService = tagService;
-    }
-
-    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public String welcome(Locale loc) {
-        return messageSource.getMessage("label.guide", null, loc);
-    }
-
-    @GetMapping(value = ACTION_FIND_ALL, produces = {MediaType.APPLICATION_JSON_VALUE})
+    /**
+     * Performs {@link ru.clevertec.ecl.entity.baseentities.Tag} search.
+     *
+     * @param pageable pagination parameters
+     * @param params DTO containing filtering parameters
+     * @return paged collection of tags
+     */
+    @GetMapping(value = ACTION_FIND_ALL)
     @ResponseStatus(HttpStatus.OK)
-    public Page<TagDto> findAll(Pageable pageable, TagDto params) {
+    public Page<TagDto> findAllTags(Pageable pageable, TagDto params) {
         return tagService.getAll(params, pageable);
     }
 
-    @GetMapping(value = ACTION_FIND, produces = {MediaType.APPLICATION_JSON_VALUE})
+    /**
+     * Performs {@link ru.clevertec.ecl.entity.baseentities.Tag} search by given id.
+     *
+     * @param id required order's id
+     * @return tag with given id
+     */
+    @GetMapping(value = ACTION_FIND)
     @ResponseStatus(HttpStatus.OK)
-    public TagDto find(@RequestParam Integer id) {
+    public TagDto findTagById(@RequestParam Integer id) {
         return tagService.findById(id);
     }
 
-    @PostMapping(value = ACTION_SAVE, produces = {MediaType.APPLICATION_JSON_VALUE})
+    /**
+     * Saves new {@link ru.clevertec.ecl.entity.baseentities.Tag}.
+     *
+     * @param tag tag data to be saved
+     * @return saved entity
+     */
+    @PostMapping(value = ACTION_SAVE)
     @ResponseStatus(HttpStatus.CREATED)
-    public TagDto save(@RequestBody TagDto params) {
-        return tagService.save(params);
+    public TagDto saveTag(@RequestBody TagDto tag) {
+        return tagService.save(tag);
     }
 
-    @PutMapping(value = ACTION_PATCH, produces = {MediaType.APPLICATION_JSON_VALUE})
+    /**
+     * Updates existing {@link ru.clevertec.ecl.entity.baseentities.Tag}.
+     *
+     * @param tag tag data to be updated
+     * @return updated tag entity
+     */
+    @PutMapping(value = ACTION_UPDATE)
     @ResponseStatus(HttpStatus.OK)
-    public TagDto patch(@RequestBody TagDto params) {
-        return tagService.update(params);
+    public TagDto updateTag(@RequestBody TagDto tag) {
+        return tagService.update(tag);
     }
 
+    /**
+     * Removes {@link ru.clevertec.ecl.entity.baseentities.Tag} by given id.
+     *
+     * @param id required tag's id
+     */
     @DeleteMapping(ACTION_DELETE)
     @ResponseStatus(HttpStatus.OK)
-    public void delete(@RequestParam Integer id) {
+    public void deleteTag(@RequestParam Integer id) {
         tagService.delete(id);
     }
 }
