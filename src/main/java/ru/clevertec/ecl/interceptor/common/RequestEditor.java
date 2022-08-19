@@ -10,6 +10,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -92,14 +95,31 @@ public class RequestEditor {
      * @param url URL to be marked
      * @return result URL as {@link String}
      */
+    public static String markUrlAsRedirected(StringBuffer url, List<Integer> replicateTo) {
+        if (url.toString().contains(REDIRECTED_PARAM)) {
+            return url.toString();
+        }
+        if (url.toString().contains("?")) {
+            return url.append(String.format(ANOTHER_PARAMETER_WITH_VALUE_PATTERN, REDIRECTED_PARAM, replicateTo)).toString();
+        } else {
+            return url.append(String.format(FIRST_PARAMETER_WITH_VALUE_PATTERN, REDIRECTED_PARAM, replicateTo)).toString();
+        }
+    }
+
+    /**
+     * Adds "redirected" mark as parameter to given request URL.
+     *
+     * @param url URL to be marked
+     * @return result URL as {@link String}
+     */
     public static String markUrlAsRedirected(StringBuffer url) {
         if (url.toString().contains(REDIRECTED_PARAM)) {
             return url.toString();
         }
         if (url.toString().contains("?")) {
-            return url.append(String.format(ANOTHER_PARAMETER_WITH_VALUE_PATTERN, REDIRECTED_PARAM, "true")).toString();
+            return url.append(String.format(ANOTHER_PARAMETER_WITH_VALUE_PATTERN, REDIRECTED_PARAM, Collections.emptyList())).toString();
         } else {
-            return url.append(String.format(FIRST_PARAMETER_WITH_VALUE_PATTERN, REDIRECTED_PARAM, "true")).toString();
+            return url.append(String.format(FIRST_PARAMETER_WITH_VALUE_PATTERN, REDIRECTED_PARAM, Collections.emptyList())).toString();
         }
     }
 

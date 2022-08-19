@@ -1,26 +1,30 @@
 spring:
   datasource:
       orders:
-        url: jdbc:postgresql://localhost:5432/node${PORT}
+        url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/node${PORT}}?useSSL=true&serverTimezone=UTC
         username: postgres
         password: Osamu_720290
         driverClassName: org.postgresql.Driver
       commitlog:
-        url: jdbc:postgresql://localhost:5432/commit_log
+        url: ${SPRING_DATASOURCE_LOG_URL:jdbc:postgresql://localhost:5432/commit_log}?useSSL=true&serverTimezone=UTC
         username: postgres
         password: Osamu_720290
         driverClassName: org.postgresql.Driver
+        continue-on-error: true
+
   jpa:
     defer-datasource-initialization: true
     hibernate:
-      ddl-auto: create
+      ddl-auto: ${DDL:none}
     show-sql: true
+    database: postgresql
   sql:
     init:
       platform: postgresql
       mode: always
 
 server:
+  host: ${HOST:localhost}
   port: ${PORT}
   sourcesPort: 8070, 8080, 8090
   replicas:

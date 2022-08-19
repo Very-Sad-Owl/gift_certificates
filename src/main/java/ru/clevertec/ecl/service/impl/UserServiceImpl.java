@@ -58,7 +58,7 @@ public class UserServiceImpl
     public UserDto findById(long id) {
         return repository.findById(id)
                 .map(mapper::userToDto)
-                .orElseThrow(NotFoundException::new);
+                .orElseThrow(() -> new NotFoundException(id));
     }
 
     /**

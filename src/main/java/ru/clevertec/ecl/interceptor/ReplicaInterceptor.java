@@ -9,12 +9,11 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.util.ContentCachingRequestWrapper;
-import ru.clevertec.ecl.util.health.HealthCheckerService;
-import ru.clevertec.ecl.util.health.Status;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static ru.clevertec.ecl.interceptor.common.ClusterProperties.changePort;
@@ -35,7 +34,6 @@ import static ru.clevertec.ecl.interceptor.common.RequestParams.*;
 public class ReplicaInterceptor implements HandlerInterceptor {
 
     private final RestTemplate restTemplate;
-    private final HealthCheckerService healthCheckerService;
 
     @Override
     public void postHandle(HttpServletRequest request, HttpServletResponse response,
@@ -49,35 +47,54 @@ public class ReplicaInterceptor implements HandlerInterceptor {
         boolean replicated = Boolean.parseBoolean(wrappedRequest.getParameter(REPLICATED_PARAM));
         if (replicated) return;
 
+        String idParam = wrappedRequest.getParameter(ID_PARAM);
+        boolean isRequestOnClusterizedEntity = idParam != null;
+        String ports = wrappedRequest.getParameter(REDIRECTED_PARAM);
+        if (ports == null || "[]".equals(ports)) return;
+        List<String> replicateToAsString = Arrays.asList(ports.substring(1, ports.length() - 1).split(", "));
+        List<Integer> replicas = replicateToAsString
+                .stream()
+                .map(Integer::parseInt)
+                .collect(Collectors.toList());
+
         String method = wrappedRequest.getMethod();
         if  (method.equals(HttpMethod.GET.name())) {
             return;
         }
         StringBuffer requestURL = wrappedRequest.getRequestURL();
         int portSavedInto = getPortFromUrl(requestURL.toString());
-        List<Status> replicas = healthCheckerService.healthCheckEndpoint(portSavedInto).values().stream()
-                .filter(Status::isOk)
-                .filter(val -> val.getPort() != portSavedInto)
-                .collect(Collectors.toList());
 
         if (method.equals(HttpMethod.POST.name()) || method.equals(HttpMethod.PUT.name())) {
             byte[] contentAsByteArray = wrappedRequest.getContentAsByteArray();
             Object entity = new ObjectMapper().readValue(contentAsByteArray, Object.class);
             if (method.equals(HttpMethod.POST.name())) {
-                replicas.stream()
-                        .map(node -> CompletableFuture.supplyAsync(() ->
-                                restTemplate.postForObject(
+                List<Object> saved = replicas.stream()
+                        .map(node -> {
+                            if (!isRequestOnClusterizedEntity) {
+                                return restTemplate.postForObject(
                                         markUrlAsReplicated(
-                                                changePort(requestURL, portSavedInto, node.getPort()), request),
-                                        entity, Object.class)))
-                        .map(CompletableFuture::join);
+                                                changePort(requestURL, portSavedInto, node), request),
+                                        entity, Object.class);
+                            } else {
+                                long id = Long.parseLong(idParam);
+                                return restTemplate.postForObject(
+                                        markUrlAsReplicated(
+                                                changePort(requestURL, portSavedInto, node, id), request),
+                                        entity, Object.class);
+                            }
+                        }
+                        )
+                        .collect(Collectors.toList());
             } else {
                 replicas.forEach(node -> restTemplate
-                        .put(changePort(requestURL, portSavedInto, node.getPort()).toString(), entity));
+                        .put(markUrlAsReplicated(
+                                changePort(requestURL, portSavedInto, node), request), entity));
             }
         } else if (method.equals(HttpMethod.DELETE.name())) {
+            long id = Long.parseLong(idParam);
             replicas.forEach(node -> restTemplate
-                    .delete(changePort(requestURL, portSavedInto, node.getPort()).toString()));
+                    .delete(markUrlAsReplicated(
+                            changePort(requestURL, portSavedInto, node, id), request)));
         }
     }
 }

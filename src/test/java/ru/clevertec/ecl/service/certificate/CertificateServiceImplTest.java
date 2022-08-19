@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
@@ -15,16 +14,15 @@ import ru.clevertec.ecl.dto.CertificateDto;
 import ru.clevertec.ecl.dto.TagDto;
 import ru.clevertec.ecl.exception.NotFoundException;
 import ru.clevertec.ecl.interceptor.common.ClusterProperties;
-import ru.clevertec.ecl.mapper.CertificateMapper;
-import ru.clevertec.ecl.mapper.CertificateMapperImpl;
-import ru.clevertec.ecl.mapper.TagMapper;
-import ru.clevertec.ecl.mapper.TagMapperImpl;
+import ru.clevertec.ecl.mapper.*;
 import ru.clevertec.ecl.service.*;
 import ru.clevertec.ecl.service.commitlog.CommitLogConfiguration;
 import ru.clevertec.ecl.service.health.HealthCheckerConfiguration;
+import ru.clevertec.ecl.service.order.OrderServiceTestConfiguration;
 import ru.clevertec.ecl.service.tag.TagServiceTestConfiguration;
-import ru.clevertec.ecl.util.commitlog.CommitLogWorker;
-import ru.clevertec.ecl.util.health.HealthCheckerService;
+import ru.clevertec.ecl.service.user.UserServiceTestConfiguration;
+import ru.clevertec.ecl.service.commitlog.CommitLogService;
+import ru.clevertec.ecl.service.health.HealthCheckerService;
 import ru.clevertec.ecl.webutils.clusterproperties.ClusterPropertiesConfiguration;
 
 import java.time.LocalDateTime;
@@ -35,7 +33,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(SpringExtension.class)
 @ActiveProfiles("test")
-@SpringBootTest(classes = {CertificateServiceTestConfiguration.class, TagMapperImpl.class, CertificateMapperImpl.class,
+@SpringBootTest(classes = {CertificateServiceTestConfiguration.class, TagMapperImpl.class,
+        UserMapperImpl.class, OrderMapperImpl.class,
+        CertificateMapperImpl.class,
         TagServiceTestConfiguration.class,
         CommitLogDbConfiguration.class,
         CertificateServiceTestConfiguration.class,
@@ -43,7 +43,9 @@ import static org.junit.jupiter.api.Assertions.*;
         CommitLogConfiguration.class,
         HealthCheckerConfiguration.class,
         ClusterPropertiesConfiguration.class,
-        CommonConfiguration.class})
+        UserServiceTestConfiguration.class,
+        CommonConfiguration.class,
+        OrderServiceTestConfiguration.class})
 @Sql(scripts = {"/clean_entity_db.sql"}, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 @Sql(scripts = {"/tags.sql", "/certificates.sql", "/certificate-tags.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 class CertificateServiceImplTest {
@@ -57,7 +59,7 @@ class CertificateServiceImplTest {
     @Autowired
     CertificateMapper certificateMapper;
     @Autowired
-    CommitLogWorker commitLogWorker;
+    CommitLogService commitLogService;
     @Autowired
     HealthCheckerService healthCheckerService;
     @Autowired
@@ -78,9 +80,6 @@ class CertificateServiceImplTest {
         exTagThree = TagDto.builder()
                 .id(3)
                 .name("holiday")
-                .build();
-        newTag = TagDto.builder()
-                .name("religion")
                 .build();
         exampleOne = CertificateDto.builder()
                 .id(1)
@@ -129,7 +128,7 @@ class CertificateServiceImplTest {
                 .duration(2)
                 .createDate(timeCreatedAndUpdated)
                 .lastUpdateDate(timeCreatedAndUpdated)
-                .tags(new HashSet<>(Arrays.asList(exTagThree, newTag)))
+                .tags(new HashSet<>(Collections.singletonList(exTagThree)))
                 .build();
     }
 
@@ -284,8 +283,8 @@ class CertificateServiceImplTest {
     @Test
     void delete_nonExistingId_exception() {
         long id = 0;
-        EmptyResultDataAccessException thrown = assertThrows(
-                EmptyResultDataAccessException.class,
+        NotFoundException thrown = assertThrows(
+                NotFoundException.class,
                 () -> service.delete(id)
         );
         assertNotNull(thrown);
@@ -316,7 +315,6 @@ class CertificateServiceImplTest {
     private static TagDto exTagOne;
     private static TagDto exTagTwo;
     private static TagDto exTagThree;
-    private static TagDto newTag;
     private static CertificateDto exampleOne;
     private static CertificateDto exampleOneCopy;
     private static CertificateDto exampleTwo;

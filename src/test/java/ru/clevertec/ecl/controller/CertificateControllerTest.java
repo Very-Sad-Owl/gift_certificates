@@ -20,13 +20,17 @@ import ru.clevertec.ecl.dto.TagDto;
 import ru.clevertec.ecl.exception.GlobalDefaultExceptionHandler;
 import ru.clevertec.ecl.interceptor.common.ClusterProperties;
 import ru.clevertec.ecl.mapper.CertificateMapperImpl;
+import ru.clevertec.ecl.mapper.OrderMapperImpl;
 import ru.clevertec.ecl.mapper.TagMapperImpl;
+import ru.clevertec.ecl.mapper.UserMapperImpl;
 import ru.clevertec.ecl.service.CommitLogDbConfiguration;
 import ru.clevertec.ecl.service.CommonConfiguration;
 import ru.clevertec.ecl.service.PrimaryDbConfiguration;
 import ru.clevertec.ecl.service.certificate.CertificateServiceTestConfiguration;
 import ru.clevertec.ecl.service.commitlog.CommitLogConfiguration;
+import ru.clevertec.ecl.service.order.OrderServiceTestConfiguration;
 import ru.clevertec.ecl.service.tag.TagServiceTestConfiguration;
+import ru.clevertec.ecl.service.user.UserServiceTestConfiguration;
 import ru.clevertec.ecl.webutils.clusterproperties.ClusterPropertiesConfiguration;
 
 import java.net.URI;
@@ -45,9 +49,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ExtendWith(SpringExtension.class)
 @ActiveProfiles("test")
 @SpringBootTest(classes = {ClusterPropertiesConfiguration.class, PrimaryDbConfiguration.class, CommitLogDbConfiguration.class,
-        TagMapperImpl.class, CertificateMapperImpl.class, CommitLogConfiguration.class, CertificateController.class,
-        CertificateServiceTestConfiguration.class, TagServiceTestConfiguration.class, GlobalDefaultExceptionHandler.class,
-        CommonConfiguration.class},
+        TagMapperImpl.class, CertificateMapperImpl.class, OrderMapperImpl.class, UserMapperImpl.class,
+        CommitLogConfiguration.class, CertificateController.class,
+        CertificateServiceTestConfiguration.class, TagServiceTestConfiguration.class, UserServiceTestConfiguration.class,
+        GlobalDefaultExceptionHandler.class,
+        CommonConfiguration.class, OrderServiceTestConfiguration.class},
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = "application-test.yml")
 @AutoConfigureMockMvc
 @EnableAutoConfiguration
@@ -79,13 +85,6 @@ public class CertificateControllerTest {
         exTagThree = TagDto.builder()
                 .id(3)
                 .name("holiday")
-                .build();
-        newTag = TagDto.builder()
-                .name("religion")
-                .build();
-        newTagSaved = TagDto.builder()
-                .id(4)
-                .name("religion")
                 .build();
         exampleOne = CertificateDto.builder()
                 .id(1)
@@ -134,7 +133,7 @@ public class CertificateControllerTest {
                 .duration(2)
                 .createDate(timeCreatedAndUpdated)
                 .lastUpdateDate(timeCreatedAndUpdated)
-                .tags(new HashSet<>(Arrays.asList(exTagThree, newTag)))
+                .tags(new HashSet<>(Collections.singletonList(exTagThree)))
                 .build();
         newCertificateSaved = CertificateDto.builder()
                 .id(4)
@@ -144,7 +143,7 @@ public class CertificateControllerTest {
                 .duration(2)
                 .createDate(timeCreatedAndUpdated)
                 .lastUpdateDate(timeCreatedAndUpdated)
-                .tags(new HashSet<>(Arrays.asList(exTagThree, newTagSaved)))
+                .tags(new HashSet<>(Collections.singletonList(exTagThree)))
                 .build();
         withNonExistingId = CertificateDto.builder()
                 .id(0)
@@ -154,7 +153,7 @@ public class CertificateControllerTest {
                 .duration(2)
                 .createDate(timeCreatedAndUpdated)
                 .lastUpdateDate(timeCreatedAndUpdated)
-                .tags(new HashSet<>(Arrays.asList(exTagThree, newTagSaved)))
+                .tags(new HashSet<>(Collections.singletonList(exTagThree)))
                 .build();
     }
 
@@ -285,8 +284,6 @@ public class CertificateControllerTest {
     private static TagDto exTagOne;
     private static TagDto exTagTwo;
     private static TagDto exTagThree;
-    private static TagDto newTag;
-    private static TagDto newTagSaved;
     private static CertificateDto exampleOne;
     private static CertificateDto exampleOneUpdated;
     private static CertificateDto exampleTwo;

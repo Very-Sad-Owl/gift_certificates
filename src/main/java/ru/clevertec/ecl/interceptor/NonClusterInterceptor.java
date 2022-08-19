@@ -9,15 +9,17 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.util.ContentCachingRequestWrapper;
-import ru.clevertec.ecl.dto.OrderDto;
 import ru.clevertec.ecl.interceptor.common.ClusterProperties;
 import ru.clevertec.ecl.interceptor.common.RequestEditor;
-import ru.clevertec.ecl.util.health.HealthCheckerService;
+import ru.clevertec.ecl.service.health.HealthCheckerService;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -26,11 +28,10 @@ import static ru.clevertec.ecl.interceptor.common.RequestParams.*;
 
 /**
  * {@link HandlerInterceptor} implementation containing handling methods of non-clusterized entities requests'.
- *
+ * <p>
  * Pre handles write/update/delete methods on non-clusterized entities from its controllers.
  *
  * @author Olga Mailychko
- *
  */
 @Component
 @Slf4j
@@ -52,21 +53,22 @@ public class NonClusterInterceptor implements HandlerInterceptor {
 
         if (requestURL.toString().contains(SEQUENCE_PARAM)) return true;
 
-        boolean redirected = Boolean.parseBoolean(wrappedReq.getParameter(REDIRECTED_PARAM));
-        if (redirected) {
+        String portsToRedirect = wrappedReq.getParameter(REDIRECTED_PARAM);
+        boolean isRedirected = portsToRedirect != null && !portsToRedirect.isEmpty();
+        if (isRedirected) {
             return true;
         }
 
-        List<Integer> available = healthCheckerService.checkAlive();
+        Map<Integer, List<Integer>> available = healthCheckerService.checkAlive();
 
         if (HttpMethod.POST.name().equals(method)) {
             Object entity = jsonToObject(wrappedReq);
             HttpEntity<Object> data = createHttpEntity(entity);
-            List<Object> saved = available.stream()
+            List<Object> saved = available.entrySet().stream()
                     .map(port -> CompletableFuture.supplyAsync(() ->
                             restTemplate
                                     .postForObject(changePort
-                                            (requestURL, clusterProperties.getPort(), port).toString(),
+                                                    (requestURL, clusterProperties.getPort(), port.getKey(), port.getValue()).toString(),
                                             data, Object.class))
                     )
                     .map(CompletableFuture::join)
@@ -76,25 +78,28 @@ public class NonClusterInterceptor implements HandlerInterceptor {
             return false;
         } else if (HttpMethod.DELETE.name().equals(method)) {
             long id = RequestEditor.getIdFromRequest(wrappedReq);
-            available.stream()
+            available.entrySet().stream()
                     .map(port -> CompletableFuture.supplyAsync(() -> {
                                 restTemplate.delete(
-                                        changePort(requestURL, clusterProperties.getPort(), port, id).toString());
+                                        changePort(requestURL, clusterProperties.getPort(), port.getKey(), id, port.getValue()).toString());
                                 return 0;
                             }
-                    )).map(CompletableFuture::join);
+                    )).map(CompletableFuture::join)
+                    .collect(Collectors.toList());
             response.setStatus(HttpStatus.OK.value());
             return false;
         } else if (HttpMethod.PUT.name().equals(method)) {
             Object entity = jsonToObject(wrappedReq);
             HttpEntity<Object> data = createHttpEntity(entity);
-            available.stream()
+            List<Integer> collected = available.entrySet().stream()
                     .map(node -> CompletableFuture.supplyAsync(() -> {
                                 restTemplate
-                                        .put(changePort(requestURL, clusterProperties.getPort(), node).toString(), data);
+                                        .put(changePort(requestURL, clusterProperties.getPort(), node.getKey(), node.getValue()).toString(), data);
                                 return 0;
                             })
-                    ).map(CompletableFuture::join);
+                    ).map(CompletableFuture::join)
+                    .collect(Collectors.toList());
+
             response.setStatus(HttpStatus.OK.value());
             String json = mapper.writeValueAsString(entity);
             RequestEditor.setJsonResponse(json, response);

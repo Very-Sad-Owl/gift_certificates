@@ -4,6 +4,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 import ru.clevertec.ecl.entity.commitlogentities.CommitLog;
 
+import javax.validation.constraints.Positive;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -20,6 +21,6 @@ public interface CommitLogRepository extends CommonCommitLogRepository<CommitLog
 
      List<CommitLog> findAllByActionTimeAfterAndPerformedOnNodeInAndTableTitle
              (LocalDateTime actionTime, Collection<Integer> performedOnNode, String tableTitle);
-
-     List<CommitLog> findAllByActionTimeAfterAndTableTitle(LocalDateTime actionTime, String tableTitle);
+     List<CommitLog> findAllByEntityIdAfterAndTableTitleAndPerformedOnNodeIn(@Positive long entityId, String tableTitle,
+                                                                             Collection<Integer> performedOnNode);
 }

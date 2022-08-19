@@ -1,14 +1,17 @@
 package ru.clevertec.ecl;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
+import ru.clevertec.ecl.interceptor.RestTemplateInterceptor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +26,10 @@ import java.util.Locale;
  *
  */
 @SpringBootApplication
+@RequiredArgsConstructor
 public class App {
+
+    private final RestTemplateInterceptor restTemplateInterceptor;
 
     public static void main(String[] args) {
         SpringApplication.run(App.class, args);
@@ -54,6 +60,7 @@ public class App {
         if (CollectionUtils.isEmpty(interceptors)) {
             interceptors = new ArrayList<>();
         }
+        interceptors.add(restTemplateInterceptor);
         restTemplate.setInterceptors(interceptors);
         return restTemplate;
     }

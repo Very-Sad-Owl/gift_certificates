@@ -8,7 +8,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.client.RestTemplate;
 import ru.clevertec.ecl.interceptor.common.ClusterProperties;
 import ru.clevertec.ecl.repository.commitlogrepository.NodeStatusRepository;
-import ru.clevertec.ecl.util.health.HealthCheckerService;
 
 @TestConfiguration
 @ActiveProfiles("test")

@@ -8,9 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.clevertec.ecl.dto.CertificateDto;
-import ru.clevertec.ecl.dto.TagDto;
 import ru.clevertec.ecl.dto.UserDto;
-import ru.clevertec.ecl.entity.baseentities.Certificate;
 import ru.clevertec.ecl.interceptor.common.ClusterProperties;
 import ru.clevertec.ecl.dto.OrderDto;
 import ru.clevertec.ecl.entity.baseentities.Order;
@@ -24,7 +22,7 @@ import ru.clevertec.ecl.repository.entityrepository.OrderRepository;
 import ru.clevertec.ecl.service.CertificateService;
 import ru.clevertec.ecl.service.OrderService;
 import ru.clevertec.ecl.service.UserService;
-import ru.clevertec.ecl.util.commitlog.CommitLogWorker;
+import ru.clevertec.ecl.service.commitlog.CommitLogService;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -51,56 +49,45 @@ public class OrderServiceImpl
     private final UserMapper userMapper;
     private final CertificateService certificateService;
     private final UserService userService;
-    private final CommitLogWorker commitLogWorker;
+    private final CommitLogService commitLogService;
     private final ObjectMapper objectMapper;
 
     @Autowired
     public OrderServiceImpl(ClusterProperties properties, OrderRepository repository, OrderMapper mapper,
                             CertificateMapper certificateMapper, UserMapper userMapper,
-                            CertificateService certificateService, CommitLogWorker commitLogWorker,
+                            CertificateService certificateService, CommitLogService commitLogService,
                             ObjectMapper objectMapper, UserService userService) {
         super(properties, repository);
         this.mapper = mapper;
         this.certificateMapper = certificateMapper;
         this.userMapper = userMapper;
         this.certificateService = certificateService;
-        this.commitLogWorker = commitLogWorker;
+        this.commitLogService = commitLogService;
         this.objectMapper = objectMapper;
         this.userService = userService;
     }
 
-    /**
-     * Performs saving logic on {@link Order} using {@link OrderDto} data.
-     *
-     * @param toSave DTO object containing saving data
-     * @return saved {@link OrderDto} object
-     */
-    @SneakyThrows
     @Override
-    @Transactional
     public OrderDto save(OrderDto toSave) {
         CertificateDto certificate = certificateService.findById(toSave.getCertificateId());
         UserDto user = userService.findById(toSave.getUserId());
         toSave.setCertificate(certificate);
-        toSave.setUser(user);
-        toSave.setPurchaseTime(LocalDateTime.now());
+        if (toSave.getPurchaseTime() == null) {
+            toSave.setPurchaseTime(LocalDateTime.now());
+        }
         toSave.calculatePrice();
-        OrderDto res = mapper.orderToDto(repository.save(mapper.dtoToOrder(toSave)));
-        toSave.setId(res.getId());
+        OrderDto saved = mapper.orderToDto(repository.save(mapper.dtoToOrder(toSave)));
+        toSave.setId(saved.getId());
+        saved.setCertificate(certificate);
+        saved.setUser(user);
 
-        CommitLog logNode = commitLogWorker.formLogNode(Action.SAVE,
-                objectMapper.writeValueAsString(toSave),
+        CommitLog logNode = commitLogService.formLogNode(Action.SAVE,
+                saved,
                 ALIAS_ORDERS);
-        commitLogWorker.writeAction(logNode);
-        return toSave;
+        commitLogService.writeAction(logNode);
+        return saved;
     }
 
-    /**
-     * Finds {@link Order} object by id.
-     *
-     * @param id id of needed {@link Order}
-     * @return found {@link Order} entity as {@link OrderDto} object
-     */
     @Override
     public OrderDto findById(long id) {
         OrderDto found = repository.findById(id)
@@ -111,17 +98,10 @@ public class OrderServiceImpl
         return found;
     }
 
-    /**
-     * Finds all {@link Order} entities from storage.
-     *
-     * @param filter {@link CertificateDto} object containing filtering fields
-     * @param pageable {@link Pageable} object storing pagination data
-     * @return paged collection of all found {@link Order} entities represented as {@link OrderDto} objects
-     */
     @Override
     public Page<OrderDto> getAll(OrderDto filter, Pageable pageable) {
         return repository.findAll(pageable)
-                .map(mapper::orderToDto)//TODO:
+                .map(mapper::orderToDto)
                 .map(t -> {
                     t.setCertificate(certificateService.findById(t.getCertificateId()));
                     t.setUser(userService.findById(t.getUserId()));
@@ -130,30 +110,16 @@ public class OrderServiceImpl
 
     }
 
-    /**
-     * Method performs removing {@link Order} entity with given id from storage.
-     *
-     * @param id id of entity to be removed
-     */
-    @SneakyThrows
     @Override
-    @Transactional
     public void delete(long id) {
+        OrderDto toDelete = findById(id);
         repository.deleteById(id);
-        CommitLog logNode = commitLogWorker.formLogNode(Action.DELETE,
-                objectMapper.writeValueAsString(id),
+        CommitLog logNode = commitLogService.formLogNode(Action.DELETE,
+                toDelete,
                 ALIAS_ORDERS);
-        commitLogWorker.writeAction(logNode);
+        commitLogService.writeAction(logNode);
     }
 
-    /**
-     * Method performs editing logic on {@link Order} entity. All data contains in {@link OrderDto}.
-     *
-     * @param dto {@link OrderDto} object that is basically original entity's data with updated fields.
-     * @return updated data as {@link OrderDto} object
-     */
-    @SneakyThrows
-    @Transactional
     @Override
     public OrderDto update(OrderDto dto) {
         repository.findById(dto.getId())
@@ -165,10 +131,10 @@ public class OrderServiceImpl
         OrderDto updated = mapper.orderToDto(repository.save(mapper.dtoToOrder(dto)));
         updated.setCertificate(requestedCertificate);
         updated.setUser(requestedUser);
-        CommitLog logNode = commitLogWorker.formLogNode(Action.UPDATE,
-                objectMapper.writeValueAsString(updated),
+        CommitLog logNode = commitLogService.formLogNode(Action.UPDATE,
+                updated,
                 ALIAS_ORDERS);
-        commitLogWorker.writeAction(logNode);
+        commitLogService.writeAction(logNode);
         return updated;
     }
 
@@ -184,13 +150,17 @@ public class OrderServiceImpl
     }
 
     @Override
-    public Set<OrderDto> findOrdersWithCertificate(CertificateDto certificate) {
-        return repository.findAllByCertificateId(certificate.getId())
+    public Set<OrderDto> findOrdersWithCertificateById(long id) {
+        return repository.findAllByCertificateId(id)
                 .stream()
                 .map(found -> {
                     OrderDto foundDto = mapper.orderToDto(found);
-                    foundDto.setCertificate(certificateService.findById(found.getCertificateId()));
-                    foundDto.setUser(userService.findById(found.getUserId()));
+                    CertificateDto certificate = certificateService.findById(found.getCertificateId());
+                    UserDto user = userService.findById(found.getUserId());
+                    foundDto.setCertificate(certificate);
+                    foundDto.setUser(user);
+                    foundDto.setCertificateId(certificate.getId());
+                    foundDto.setUserId(user.getId());
                     return foundDto;
                 })
                 .collect(Collectors.toSet());
@@ -202,7 +172,6 @@ public class OrderServiceImpl
     }
 
     @Override
-    @Transactional
     public void updateSequence(long val) {
         repository.setSeqVal(ORDERS_SEQUENCE, val);
     }

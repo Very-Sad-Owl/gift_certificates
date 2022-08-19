@@ -24,8 +24,6 @@ import ru.clevertec.ecl.exception.NotFoundException;
 import ru.clevertec.ecl.exception.ServerIsDownException;
 import ru.clevertec.ecl.service.CommitLogDbConfiguration;
 import ru.clevertec.ecl.service.CommonConfiguration;
-import ru.clevertec.ecl.util.health.Status;
-import ru.clevertec.ecl.util.health.HealthCheckerService;
 import ru.clevertec.ecl.webutils.clusterproperties.ClusterPropertiesConfiguration;
 
 import java.net.URI;
@@ -147,14 +145,15 @@ public class HealthCheckerTest {
     @Test
     public void findAnyAliveNodeFromReplicas_availablePortExists_anyAvailablePort() {
         mockServer.expect(ExpectedCount.once(),
+                requestTo(new URI("http://localhost:8072/actuator/health")))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withServerError());
+
+        mockServer.expect(ExpectedCount.once(),
                 requestTo(new URI("http://localhost:8070/actuator/health")))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withStatus(HttpStatus.OK));
 
-        mockServer.expect(ExpectedCount.once(),
-                requestTo(new URI("http://localhost:8072/actuator/health")))
-                .andExpect(method(HttpMethod.GET))
-                .andRespond(withStatus(HttpStatus.OK));
 
         int actual = healthCheckerService.findAnyAliveNodeFromReplicas(8070);
         assertEquals(8070, actual);
@@ -199,15 +198,25 @@ public class HealthCheckerTest {
                 );
 
         mockServer.expect(ExpectedCount.once(),
+                requestTo(new URI("http://localhost:8072/actuator/health")))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withStatus(HttpStatus.OK));
+
+        mockServer.expect(ExpectedCount.once(),
                 requestTo(new URI("http://localhost:8092/actuator/health")))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withServerError());
+
+        mockServer.expect(ExpectedCount.once(),
+                requestTo(new URI("http://localhost:8070/actuator/health")))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withStatus(HttpStatus.OK));
+
 
         ServerIsDownException thrown = assertThrows(ServerIsDownException.class, () -> {
             healthCheckerService.checkAlive();
         });
 
-        mockServer.verify();
         mockServer.reset();
 
         assertNotNull(thrown);
@@ -216,22 +225,22 @@ public class HealthCheckerTest {
     @SneakyThrows
     @Test
     public void checkAlive_nodes8070_aliveNodesList() {
-        mockServer.expect(ExpectedCount.once(),
-                requestTo(new URI("http://localhost:8070/actuator/health")))
-                .andExpect(method(HttpMethod.GET))
-                .andRespond(withStatus(HttpStatus.OK));
 
         mockServer.expect(ExpectedCount.once(),
                 requestTo(new URI("http://localhost:8072/actuator/health")))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withStatus(HttpStatus.OK));
 
-        List<Integer> actual = healthCheckerService.checkAlive(8070);
+        mockServer.expect(ExpectedCount.once(),
+                requestTo(new URI("http://localhost:8070/actuator/health")))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withStatus(HttpStatus.OK));
 
-        mockServer.verify();
+        Map<Integer,List<Integer>> actual = healthCheckerService.checkAlive(8070);
+
         mockServer.reset();
 
-        assertEquals(2, actual.size());
+        assertEquals(1, actual.get(8070).size());
     }
 
     @SneakyThrows
@@ -254,11 +263,16 @@ public class HealthCheckerTest {
                 .andRespond(withStatus(HttpStatus.OK));
 
         mockServer.expect(ExpectedCount.once(),
+                requestTo(new URI("http://localhost:8072/actuator/health")))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withStatus(HttpStatus.OK));
+
+        mockServer.expect(ExpectedCount.once(),
                 requestTo(new URI("http://localhost:8092/actuator/health")))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withStatus(HttpStatus.OK));
 
-        List<Integer> actual = healthCheckerService.checkAlive();
+        Map<Integer,List<Integer>>  actual = healthCheckerService.checkAlive();
 
         mockServer.verify();
         mockServer.reset();
@@ -416,6 +430,13 @@ public class HealthCheckerTest {
         mockServer.reset();
 
         assertEquals(expected, actual);
+    }
+
+    @Test
+    public void findLastUpdatedByNodeTest_7090sRange() {
+        NodeStatus actual = healthCheckerService
+                .findLastUpdatedByNode(Arrays.asList("node8090", "node8091", "node8092"));
+        assertEquals(actual.getNodeTitle(), "node8090");
     }
 
 

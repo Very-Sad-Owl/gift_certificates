@@ -1,4 +1,4 @@
-package ru.clevertec.ecl.util.health;
+package ru.clevertec.ecl.service.health;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -7,24 +7,19 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import ru.clevertec.ecl.entity.commitlogentities.NodeStatus;
 import ru.clevertec.ecl.exception.NotFoundException;
 import ru.clevertec.ecl.exception.ServerIsDownException;
 import ru.clevertec.ecl.interceptor.common.ClusterProperties;
 import ru.clevertec.ecl.repository.commitlogrepository.NodeStatusRepository;
-import ru.clevertec.ecl.util.commitlog.CommitLogWorker;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -32,7 +27,6 @@ import java.util.stream.Collectors;
  * A class performing health checking logic.
  *
  * @author Olga Mailychko
- *
  */
 @Slf4j
 @Component
@@ -116,7 +110,8 @@ public class HealthCheckerService {
                         {
                             try {
                                 JsonNode object = restTemplate
-                                        .getForObject(String.format(APP_URL_PATTERN, node), JsonNode.class);
+                                        .getForObject(String.format(APP_URL_PATTERN, node),
+                                                JsonNode.class);
                                 ((ObjectNode) object).put(NODE_TITLE_PREFIX, node);
                                 return new Status(object);
                             } catch (Exception e) {
@@ -141,7 +136,7 @@ public class HealthCheckerService {
      *
      * @return {@link List} of available node's ports
      */
-    public List<Integer> checkAlive() {
+    public Map<Integer, List<Integer>> checkAlive() {
         List<NodeStatus> allDown = logRepository.findAllByNodeStatus(false);
         return getCurrentAvailable(allDown, 0);
     }
@@ -150,10 +145,10 @@ public class HealthCheckerService {
      * Method finds currently available nodes excluding those which unavailable after last health check
      *
      * @param port node's port related to some main node. Only replicas of this main node(including main node itself)
-     *            will be checked.
+     *             will be checked.
      * @return {@link List} of available node's ports
      */
-    public List<Integer> checkAlive(int port) {
+    public Map<Integer, List<Integer>> checkAlive(int port) {
         List<String> nodes = clusterProperties.getCluster()
                 .get(clusterProperties.defineNodeByPort(port))
                 .stream().map(n -> "node" + n)
@@ -166,12 +161,12 @@ public class HealthCheckerService {
      * Method finds all currently available nodes within replicas of given node's port
      *
      * @param alreadyUnavailable list of already unavailable nodes
-     * @param forPorts some node's port belonging to cluster. If its value != 0, method checks only nodes within
-     *                 main node's replicas where node with given port belongs, otherwise checks whole cluster.
+     * @param forPorts           some node's port belonging to cluster. If its value != 0, method checks only nodes within
+     *                           main node's replicas where node with given port belongs, otherwise checks whole cluster.
      * @return {@link List} of available node's ports
      */
     @SneakyThrows
-    public List<Integer> getCurrentAvailable(List<NodeStatus> alreadyUnavailable, int forPorts) {
+    public Map<Integer, List<Integer>> getCurrentAvailable(List<NodeStatus> alreadyUnavailable, int forPorts) {
         List<Integer> unavailable = alreadyUnavailable.stream().map(NodeStatus::getNodeTitle)
                 .map(v -> v.replace("node", ""))
                 .map(Integer::parseInt)
@@ -182,18 +177,20 @@ public class HealthCheckerService {
         if (forPorts != 0) {
             allNode = allNode.entrySet()
                     .stream()
-                    .filter(k -> k.getKey() == forPorts)
-                    .map(k -> CompletableFuture.supplyAsync(() -> {
+                    .filter(k -> k.getKey() == clusterProperties.defineNodeByPort(forPorts))
+                    .map(k -> {
                         k.getValue().removeAll(unavailable);
                         return k;
-                    }))
-                    .map(CompletableFuture::join)
+                    })
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         } else {
-            allNode.get(8070).removeAll(unavailable);
-            allNode.get(8080).removeAll(unavailable);
-            allNode.get(8090).removeAll(unavailable);
-            allNode.remove(clusterProperties.defineNodeByPort(clusterProperties.getPort()));
+            allNode = allNode.entrySet()
+                    .stream()
+                    .map(k -> {
+                        k.getValue().removeAll(unavailable);
+                        return k;
+                    })
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         }
 
         for (List<Integer> el : allNode.values()) {
@@ -202,32 +199,52 @@ public class HealthCheckerService {
             }
         }
 
-        final List<Integer> available = allNode.values().stream()
+        final List<Integer> available = new ArrayList<>();
+        allNode.values().stream()
                 .flatMap(List::stream)
-                .map(n -> CompletableFuture.supplyAsync(() ->{
-                    try {
-                        restTemplate
-                                .getForObject(String.format(APP_URL_PATTERN, n), Object.class);
-                    } catch (RestClientException e) {
-                        return 0;
-                    }
-                    return n;
-                }))
+                .map(n -> CompletableFuture.supplyAsync(() -> {
+                            if (n != clusterProperties.getPort()) {
+                                restTemplate
+                                        .getForObject(String.format(APP_URL_PATTERN, n),
+                                                Object.class);
+                            }
+                            return n;
+                        })
+                                .thenApplyAsync(v -> {
+                                    available.add(v);
+                                    return v;
+                                })
+                                .exceptionally(e -> {
+                                    available.add(0);
+                                    return 0;
+                                })
+
+                )
                 .map(CompletableFuture::join)
                 .collect(Collectors.toList());
 
-        List<Integer> anyAvailableNow = allNode.values().stream()
+
+        Map<Integer, List<Integer>> availableNow = allNode.entrySet().stream()
                 .map(v -> {
-                    v.retainAll(available);
-                    if (v.isEmpty()) return 0;
-                    return v.get(0);
-                }).collect(Collectors.toList());
+                    v.getValue().retainAll(available);
+                    if (v.getValue().isEmpty()) {
+                        throw new ServerIsDownException();
+                    }
+                    return v;
+                })
+                .map(v -> {
+                    int newKey;
+                    if (forPorts != 0) {
+                        newKey = forPorts;
+                    } else {
+                        newKey = v.getValue().get(0);
+                    }
+                    v.getValue().remove((Object) newKey);
+                    return new AbstractMap.SimpleEntry<>(newKey, v.getValue());
+                })
+                .collect(Collectors.toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue));
 
-        if (anyAvailableNow.contains((Object) 0)) throw new ServerIsDownException();
-
-        anyAvailableNow.add(clusterProperties.getPort());
-
-        return anyAvailableNow;
+        return availableNow;
     }
 
     /**
@@ -237,9 +254,17 @@ public class HealthCheckerService {
      * @return any available node's port
      */
     public int findAnyAliveNodeFromReplicas(int port) {
-        List<Integer> available = checkAlive(port);
-        available.retainAll(clusterProperties.getCluster().get(clusterProperties.defineNodeByPort(port)));
-        return available.get(0);
+        Map<Integer, List<Integer>> available = checkAlive(port);
+        return available.get(port).isEmpty() ? port : available.get(port).get(0);
+    }
+
+    public List<Integer> findAliveNodesFromSubclusterInList(int port, List<Integer> available) {
+        List<Integer> availableCopy = new ArrayList<>(available);
+        List<Integer> toSearchFor = clusterProperties.getCluster().get(clusterProperties.defineNodeByPort(port));
+        availableCopy.retainAll(toSearchFor);
+        if (availableCopy.isEmpty()) throw new ServerIsDownException();
+        return availableCopy;
+
     }
 
     /**
@@ -265,7 +290,17 @@ public class HealthCheckerService {
     /**
      * Method updates some {@link NodeStatus} entity's value
      *
-     * @param port port of node to update
+     * @param titles collection on node titles to find in
+     * @return returns last updated node in given range of titles
+     */
+    public NodeStatus findLastUpdatedByNode(List<String> titles) {
+        return logRepository.findFirstByNodeTitleInOrderByLastUpdatedDesc(titles);
+    }
+
+    /**
+     * Method updates some {@link NodeStatus} entity's value
+     *
+     * @param port      port of node to update
      * @param newStatus boolean value indicating whether node is up(true) or down(false)
      * @return updated node's status represented as {@link NodeStatus} object
      */

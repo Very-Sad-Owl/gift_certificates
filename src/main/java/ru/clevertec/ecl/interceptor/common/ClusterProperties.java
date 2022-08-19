@@ -4,6 +4,8 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -23,6 +25,10 @@ import static ru.clevertec.ecl.interceptor.common.RequestParams.REPLICATED_PARAM
 @RequiredArgsConstructor
 @Data
 public class ClusterProperties {
+    /**
+     * Current host, 'localhost' by default.
+     */
+    private String host;
     /**
      * Port the application is run on.
      */
@@ -61,11 +67,20 @@ public class ClusterProperties {
      * @param replacer replacer port value
      * @return updated request string represented as {@link StringBuffer} object.
      */
+    public static StringBuffer changePort(StringBuffer requestString, int replaced, int replacer, List<Integer> replicateTo) {
+        return new StringBuffer(
+                markUrlAsRedirected(
+                        new StringBuffer(requestString.toString().replaceAll(replaced + "", replacer + "")),
+                        replicateTo
+                )
+        );
+    }
+
     public static StringBuffer changePort(StringBuffer requestString, int replaced, int replacer) {
         return new StringBuffer(
                 markUrlAsRedirected(
-                        new StringBuffer(requestString.toString().replaceAll(replaced + "", replacer + ""))
-
+                        new StringBuffer(requestString.toString().replaceAll(replaced + "", replacer + "")),
+                        new ArrayList<>()
                 )
         );
     }
@@ -79,12 +94,22 @@ public class ClusterProperties {
      * @param id replacer port value
      * @return updated request string represented as {@link StringBuffer} object.
      */
+    public static StringBuffer changePort(StringBuffer requestString, int replaced, int replacer, long id, List<Integer> replicateTo) {
+        return new StringBuffer(
+                markUrlAsRedirected(
+                        new StringBuffer(requestString.toString().replaceAll(replaced + "", replacer + "")
+                                .replaceAll(REPLICATED_PARAM, "")
+                                + "?id=" + id), replicateTo
+                )
+        );
+    }
+
     public static StringBuffer changePort(StringBuffer requestString, int replaced, int replacer, long id) {
         return new StringBuffer(
                 markUrlAsRedirected(
                         new StringBuffer(requestString.toString().replaceAll(replaced + "", replacer + "")
                                 .replaceAll(REPLICATED_PARAM, "")
-                                + "?id=" + id)
+                                + "?id=" + id), new ArrayList<>()
                 )
         );
     }

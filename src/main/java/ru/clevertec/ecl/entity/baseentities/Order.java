@@ -41,8 +41,7 @@ public class Order extends AbstractEntity{
     private long id;
 
     @NotNull
-    @Positive
-//    @Digits(integer = 4, fraction = 2)
+    @Min(0)
     @Column(nullable = false)
     private double price;
 
@@ -52,7 +51,7 @@ public class Order extends AbstractEntity{
 
     @NotNull
     @Column(nullable = false)
-    @Positive
+    @Min(0)
     private long certificateId;
 
     @NotNull

@@ -8,27 +8,29 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.util.ContentCachingRequestWrapper;
-import ru.clevertec.ecl.interceptor.common.ClusterProperties;
 import ru.clevertec.ecl.dto.OrderDto;
 import ru.clevertec.ecl.exception.UndefinedException;
+import ru.clevertec.ecl.interceptor.common.ClusterProperties;
 import ru.clevertec.ecl.interceptor.common.RequestEditor;
-import ru.clevertec.ecl.util.health.HealthCheckerService;
+import ru.clevertec.ecl.service.health.HealthCheckerService;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
-import static ru.clevertec.ecl.interceptor.common.ClusterProperties.*;
+import static ru.clevertec.ecl.interceptor.common.ClusterProperties.changePort;
 import static ru.clevertec.ecl.interceptor.common.RequestParams.*;
 
 /**
  * {@link HandlerInterceptor} implementation containing handling methods of clusterized entities requests'.
- *
+ * <p>
  * Pre handles write/update/delete methods on {@link ru.clevertec.ecl.entity.baseentities.Order} entities from its controllers.
  *
  * @author Olga Mailychko
- *
  */
 @Component
 @EnableConfigurationProperties
@@ -40,29 +42,32 @@ public class ClusterInterceptor implements HandlerInterceptor {
     private final RestTemplate restTemplate;
     private final HealthCheckerService healthCheckerService;
     private final ObjectMapper objectMapper;
-    private static final String SEQ_CURR_PATTERN = "http://localhost:%s/orders/sequence/current";
-    private static final String SEQ_NEXT_PATTERN = "http://localhost:%s/orders/sequence/next";
+    private static final String SEQ_CURR_PATTERN = "http://localhost:%d/orders/sequence/current";
+    private static final String SEQ_NEXT_PATTERN = "http://localhost:%d/orders/sequence/next";
+    private static final String SEQ_SET_PATTERN = "http://localhost:%d/orders/sequence/set";
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws Exception {
-        ContentCachingRequestWrapper wrappedReq = (ContentCachingRequestWrapper)request;
+        ContentCachingRequestWrapper wrappedReq = (ContentCachingRequestWrapper) request;
 
         String method = wrappedReq.getMethod();
         StringBuffer requestURL = wrappedReq.getRequestURL();
 
         if (requestURL.toString().contains(SEQUENCE_PARAM)) return true;
 
-        boolean redirected = Boolean.parseBoolean(wrappedReq.getParameter(REDIRECTED_PARAM));
-        if (redirected) {
+        String parameter = wrappedReq.getParameter(REDIRECTED_PARAM);
+        boolean isRedirected = parameter != null;
+        boolean isReplicated = Boolean.parseBoolean(wrappedReq.getParameter(REPLICATED_PARAM));
+        String idParam = wrappedReq.getParameter(ID_PARAM);
+        if (isRedirected && !isReplicated) {
             return true;
         }
 
-        List<Integer> availablePorts = healthCheckerService.checkAlive();
         if (method.equals(HttpMethod.GET.name())) {
-            String idParam = wrappedReq.getParameter(ID_PARAM);
+            idParam = wrappedReq.getParameter(ID_PARAM);
             if ("".equals(idParam)) {
-                long id = RequestEditor.getIdFromRequest(wrappedReq);
+                long id = Long.parseLong(wrappedReq.getParameter(ID_PARAM)) + 1;
                 int portToRedirect = clusterProperties.definePortById(id);
                 portToRedirect = healthCheckerService.findAnyAliveNodeFromReplicas(portToRedirect);
                 if (clusterProperties.getSourcesPort().contains(portToRedirect)) {
@@ -75,17 +80,49 @@ public class ClusterInterceptor implements HandlerInterceptor {
                 return false;
             }
         } else if (HttpMethod.POST.name().equals(method)) {
+            List<Integer> availablePorts = new ArrayList<>();
+            if (!isReplicated) {
+                availablePorts = healthCheckerService.checkAlive()
+                        .entrySet()
+                        .stream()
+                        .map(v -> {
+                            List<Integer> available = new ArrayList<>();
+                            available.add(v.getKey());
+                            available.addAll(v.getValue());
+                            return available;
+                        })
+                        .flatMap(List::stream)
+                        .collect(Collectors.toList());
+            }
             OrderDto entity = jsonStringToOrderDto(wrappedReq);
             HttpEntity<OrderDto> data = createHttpEntity(entity);
-            long id = getMaxSequenceValue(availablePorts) + 1;
-            int portToRedirect = clusterProperties.definePortById(id);
-            portToRedirect = healthCheckerService.findAnyAliveNodeFromReplicas(portToRedirect);
-            if (clusterProperties.getPort() == portToRedirect) {
-                return false;
+            long currentNaxSequenceValue;
+            long id;
+            int portToRedirect;
+            List<Integer> replicateInto = new ArrayList<>();
+            if (!isReplicated) {
+                currentNaxSequenceValue = getMaxSequenceValue(availablePorts);
+                id = currentNaxSequenceValue + 1;
+                portToRedirect = clusterProperties.definePortById(id);
+                List<Integer> availableInPort = healthCheckerService
+                        .findAliveNodesFromSubclusterInList(portToRedirect, availablePorts);
+                portToRedirect = availableInPort.get(0);
+                replicateInto = new ArrayList<>();
+                if (availableInPort.size() > 1) {
+                    replicateInto = availableInPort.subList(1, availableInPort.size());
+                }
+            } else {
+                currentNaxSequenceValue = Long.parseLong(wrappedReq.getParameter(ID_PARAM));
+                portToRedirect = clusterProperties.getPort();
             }
-            requestURL = changePort(requestURL, clusterProperties.getPort(), portToRedirect);
+
+            requestURL = changePort(requestURL, clusterProperties.getPort(),
+                    portToRedirect, currentNaxSequenceValue, replicateInto);
+
+            restTemplate.postForObject(String.format(SEQ_SET_PATTERN, portToRedirect),
+                    currentNaxSequenceValue, Object.class);
+
             OrderDto orderDTO = restTemplate.postForObject(requestURL.toString(), data, OrderDto.class);
-            moveSequence(availablePorts, portToRedirect);
             String orderJson = mapper.writeValueAsString(orderDTO);
             RequestEditor.setJsonResponse(orderJson, response);
             return false;
@@ -119,27 +156,12 @@ public class ClusterInterceptor implements HandlerInterceptor {
     }
 
     /**
-     * Sends request on moving sequence.
-     *
-     * @param ports port values to send request on
-     * @param excludedPort port to exclude from sending list
-     */
-    private void moveSequence(List<Integer> ports, int excludedPort) {
-        ports.stream()
-                .filter(val -> val != excludedPort)
-                .map(node -> CompletableFuture.supplyAsync(() ->
-                        restTemplate.getForObject(String.format(SEQ_NEXT_PATTERN,  node), Object.class)
-                ))
-                .map(CompletableFuture::join);
-    }
-
-    /**
      * Get maximum value of orders entity storage's sequence.
      *
      * @param nodes nodes to send request on
      * @return max sequence value from all requested nodes
      */
-    private long getMaxSequenceValue(List<Integer> nodes){
+    private long getMaxSequenceValue(List<Integer> nodes) {
         return nodes.stream()
                 .map(node -> CompletableFuture.supplyAsync(() ->
                         restTemplate.getForObject(buildUrlToCurrentSequenceValueRequest(node), Long.class)))

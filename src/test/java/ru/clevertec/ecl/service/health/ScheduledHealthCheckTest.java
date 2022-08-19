@@ -23,8 +23,6 @@ import org.springframework.web.client.RestTemplate;
 import ru.clevertec.ecl.exception.GlobalDefaultExceptionHandler;
 import ru.clevertec.ecl.service.CommitLogDbConfiguration;
 import ru.clevertec.ecl.service.CommonConfiguration;
-import ru.clevertec.ecl.util.health.Status;
-import ru.clevertec.ecl.util.health.HealthCheckerService;
 import ru.clevertec.ecl.webutils.clusterproperties.ClusterPropertiesConfiguration;
 
 import java.net.URI;

@@ -29,11 +29,10 @@ public interface OrderService extends CRUDService<OrderDto> {
     /**
      * Method finds all {@link Order} entities from storage with given {@link Certificate}'s id.
      *
-     * @param certificate {@link Certificate} represented as {@link CertificateDto} which must be containing in {@link Order}
-     *                          that all found entities must include.
+     * @param id id of contained certificate.
      * @return set of found {@link Order} entities represented as {@link OrderDto}
      */
-    Set<OrderDto> findOrdersWithCertificate(CertificateDto certificate);
+    Set<OrderDto> findOrdersWithCertificateById(long id);
     /**
      * Method moves {@link ru.clevertec.ecl.entity.baseentities.Order}'s sequence to next value
      *

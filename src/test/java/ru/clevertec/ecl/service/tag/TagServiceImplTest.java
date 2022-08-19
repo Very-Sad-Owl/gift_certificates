@@ -23,8 +23,8 @@ import ru.clevertec.ecl.service.TagService;
 import ru.clevertec.ecl.service.certificate.CertificateServiceTestConfiguration;
 import ru.clevertec.ecl.service.commitlog.CommitLogConfiguration;
 import ru.clevertec.ecl.service.health.HealthCheckerConfiguration;
-import ru.clevertec.ecl.util.commitlog.CommitLogWorker;
-import ru.clevertec.ecl.util.health.HealthCheckerService;
+import ru.clevertec.ecl.service.commitlog.CommitLogService;
+import ru.clevertec.ecl.service.health.HealthCheckerService;
 import ru.clevertec.ecl.webutils.clusterproperties.ClusterPropertiesConfiguration;
 
 import java.util.Arrays;
@@ -51,7 +51,7 @@ class TagServiceImplTest {
     @Autowired
     TagMapper tagMapper;
     @Autowired
-    CommitLogWorker commitLogWorker;
+    CommitLogService commitLogService;
     @Autowired
     HealthCheckerService healthCheckerService;
     @Autowired
@@ -187,6 +187,16 @@ class TagServiceImplTest {
         NotFoundException thrown = assertThrows(
                 NotFoundException.class,
                 () -> service.findByName(name)
+        );
+
+        assertNotNull(thrown);
+    }
+
+    @Test
+    void findTopUserMoreCommonTagTest() {
+        NotFoundException thrown = assertThrows(
+                NotFoundException.class,
+                () -> service.findTopUserMoreCommonTag()
         );
 
         assertNotNull(thrown);

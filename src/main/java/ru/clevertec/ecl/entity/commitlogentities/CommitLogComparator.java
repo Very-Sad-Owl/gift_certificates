@@ -2,7 +2,6 @@ package ru.clevertec.ecl.entity.commitlogentities;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.springframework.beans.factory.annotation.Autowired;
 import ru.clevertec.ecl.exception.UndefinedException;
 
 import java.util.Comparator;
@@ -26,21 +25,10 @@ public class CommitLogComparator implements Comparator<CommitLog> {
 
     @Override
     public int compare(CommitLog o1, CommitLog o2) {
-        long o1Id;
-        long o2Id;
+        long o1Id = o1.getEntityId();
+        long o2Id = o2.getEntityId();
         TablePriority o1Table = TablePriority.findByTitle(o1.getTableTitle());
         TablePriority o2Table = TablePriority.findByTitle(o2.getTableTitle());
-        if (o1.getAction() != Action.DELETE) {
-            o1Id = retrieveIdFromJson(o1.getJsonValue());
-        } else {
-            o1Id = Long.parseLong(o1.getJsonValue());
-        }
-        if (o2.getAction() != Action.DELETE) {
-            o2Id = retrieveIdFromJson(o2.getJsonValue());
-        } else {
-            o2Id = Long.parseLong(o2.getJsonValue());
-        }
-
         if (o1.getAction() == o2.getAction()) {
             if (o1Table.equals(o2Table)) {
                 return Long.compare(o1Id, o2Id);
@@ -62,16 +50,6 @@ public class CommitLogComparator implements Comparator<CommitLog> {
         } else {
             return 0;
         }
-    }
-
-    public long retrieveIdFromJson(String json) {
-        Pattern idRetrieverPattern = Pattern.compile(ID_PATTERN_TEMPLATE);
-        Matcher idMatcher = idRetrieverPattern.matcher(json);
-        if (idMatcher.matches()) {
-            String id = idMatcher.group("id");
-            return Long.parseLong(id);
-        }
-        throw new UndefinedException();
     }
 
     /**

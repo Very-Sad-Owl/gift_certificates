@@ -3,8 +3,8 @@ package ru.clevertec.ecl.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.clevertec.ecl.util.health.HealthCheckerService;
-import ru.clevertec.ecl.util.health.Status;
+import ru.clevertec.ecl.service.health.HealthCheckerService;
+import ru.clevertec.ecl.service.health.Status;
 
 import java.util.Collection;
 

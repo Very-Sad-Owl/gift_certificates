@@ -22,14 +22,6 @@ public interface TagService extends CRUDService<TagDto> {
      */
     TagDto findByName(String name);
     /**
-     * Method performs saving logic on {@link Tag} if it's not yet exists in storage, otherwise serches existing
-     * entity by its id.
-     *
-     * @param tag {@link TagDto} object with existing id or new data to save
-     * @return found or saved {@link Tag} entity represented as {@link TagDto}
-     */
-    TagDto getOrSaveIfExists(TagDto tag);
-    /**
      * Method finds top {@link Tag} popular among {@link ru.clevertec.ecl.entity.baseentities.User}s.
      *
      * @return found {@link Tag} entity represented as {@link TagDto}

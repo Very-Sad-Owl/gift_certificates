@@ -26,7 +26,7 @@ public class ClusterPropertiesTest {
         int replacerPort = 8091;
         StringBuffer url = new StringBuffer(String.format("localhost:%s/status", portToChange));
 
-        String expected = String.format("localhost:%s/status?redirected=true", replacerPort);
+        String expected = String.format("localhost:%s/status?redirected=[]", replacerPort);
 
         String actual = ClusterProperties.changePort(url, portToChange, replacerPort).toString();
 
@@ -41,7 +41,7 @@ public class ClusterPropertiesTest {
         int replacerPort = 8091;
         StringBuffer url = new StringBuffer(String.format("localhost:%s/status", actualPort));
 
-        String expected = String.format("localhost:%s/status?redirected=true", actualPort);
+        String expected = String.format("localhost:%s/status?redirected=[]", actualPort);
 
         String actual = ClusterProperties.changePort(url, portToChange, replacerPort).toString();
 

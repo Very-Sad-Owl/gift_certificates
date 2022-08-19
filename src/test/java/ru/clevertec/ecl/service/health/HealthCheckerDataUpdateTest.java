@@ -11,8 +11,6 @@ import ru.clevertec.ecl.entity.commitlogentities.NodeStatus;
 import ru.clevertec.ecl.exception.NotFoundException;
 import ru.clevertec.ecl.service.CommitLogDbConfiguration;
 import ru.clevertec.ecl.service.CommonConfiguration;
-import ru.clevertec.ecl.util.health.Status;
-import ru.clevertec.ecl.util.health.HealthCheckerService;
 import ru.clevertec.ecl.webutils.clusterproperties.ClusterPropertiesConfiguration;
 
 import java.time.LocalDateTime;

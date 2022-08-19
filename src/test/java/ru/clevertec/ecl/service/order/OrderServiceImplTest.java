@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,7 +22,7 @@ import ru.clevertec.ecl.service.certificate.CertificateServiceTestConfiguration;
 import ru.clevertec.ecl.service.commitlog.CommitLogConfiguration;
 import ru.clevertec.ecl.service.tag.TagServiceTestConfiguration;
 import ru.clevertec.ecl.service.user.UserServiceTestConfiguration;
-import ru.clevertec.ecl.util.commitlog.CommitLogWorker;
+import ru.clevertec.ecl.service.commitlog.CommitLogService;
 import ru.clevertec.ecl.webutils.clusterproperties.ClusterPropertiesConfiguration;
 
 import java.time.LocalDateTime;
@@ -44,6 +43,7 @@ import static org.junit.jupiter.api.Assertions.*;
         CommitLogConfiguration.class,
         ClusterPropertiesConfiguration.class,
         TagServiceTestConfiguration.class,
+        UserServiceTestConfiguration.class,
         CommonConfiguration.class})
 @Sql(scripts = {"/clean_entity_db.sql"}, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 @Sql(scripts = {"/tags.sql", "/certificates.sql", "/certificate-tags.sql", "/users.sql", "/orders.sql"},
@@ -55,7 +55,7 @@ class OrderServiceImplTest {
     @Autowired
     CertificateService certificateService;
     @Autowired
-    CommitLogWorker commitLogWorker;
+    CommitLogService commitLogService;
     @Autowired
     UserService userService;
     @Autowired
@@ -207,8 +207,8 @@ class OrderServiceImplTest {
     @Test
     void delete_nonExistingId_exception() {
         long id = 0;
-        EmptyResultDataAccessException thrown = assertThrows(
-                EmptyResultDataAccessException.class,
+        NotFoundException thrown = assertThrows(
+                NotFoundException.class,
                 () -> service.delete(id)
         );
         assertNotNull(thrown);
@@ -266,7 +266,7 @@ class OrderServiceImplTest {
     void findOrdersWithCertificate_existingCertificate_allOrdersWithGivenCertificate() {
         Set<OrderDto> expected = new HashSet<>(Arrays.asList(secondNode));
 
-        Set<OrderDto> actual = service.findOrdersWithCertificate(exampleCertificateTwo);
+        Set<OrderDto> actual = service.findOrdersWithCertificateById(exampleCertificateTwo.getId());
 
         assertEquals(expected, actual);
     }
@@ -276,7 +276,7 @@ class OrderServiceImplTest {
         CertificateDto containingCertificate = CertificateDto.builder()
                 .id(0)
                 .build();
-        Set<OrderDto> actual = service.findOrdersWithCertificate(containingCertificate);
+        Set<OrderDto> actual = service.findOrdersWithCertificateById(containingCertificate.getId());
 
         assertEquals(0, actual.size());
     }

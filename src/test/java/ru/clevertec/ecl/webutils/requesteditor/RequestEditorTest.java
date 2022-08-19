@@ -84,7 +84,7 @@ public class RequestEditorTest {
     public void markUrlAsRedirectedTest_notYetRedirectedWithParameters_markAsRedirected() {
         StringBuffer url = new StringBuffer("localhost:8080/tags/find?id=1");
 
-        String expected = "localhost:8080/tags/find?id=1&redirected=true";
+        String expected = "localhost:8080/tags/find?id=1&redirected=[]";
 
         String actual = RequestEditor.markUrlAsRedirected(url);
 
@@ -95,7 +95,7 @@ public class RequestEditorTest {
     public void markUrlAsRedirectedTest_notYetRedirectedWithoutParameters_markAsRedirected() {
         StringBuffer url = new StringBuffer("localhost:8080/tags/delete");
 
-        String expected = "localhost:8080/tags/delete?redirected=true";
+        String expected = "localhost:8080/tags/delete?redirected=[]";
 
         String actual = RequestEditor.markUrlAsRedirected(url);
 
@@ -104,7 +104,7 @@ public class RequestEditorTest {
 
     @Test
     public void markUrlAsRedirectedTest_alreadyRedirected_sameUrl() {
-        String expected = "localhost:8080/tags/delete?redirected=true";
+        String expected = "localhost:8080/tags/delete?redirected=[]";
 
         StringBuffer url = new StringBuffer(expected);
 
@@ -115,10 +115,10 @@ public class RequestEditorTest {
 
     @Test
     public void markAsReplicatedTest_redirectedBefore_addReplicatedFlagAsNewParameter() {
-        StringBuffer url = new StringBuffer("localhost:8080/tags/delete?redirected=true");
+        StringBuffer url = new StringBuffer("localhost:8080/tags/delete?redirected=[]");
         request.setParameter("redirected", "true");
 
-        String expected = "localhost:8080/tags/delete?redirected=true&replicated=true";
+        String expected = "localhost:8080/tags/delete?redirected=[]&replicated=true";
 
         String actual = RequestEditor.markUrlAsReplicated(url, request);
 

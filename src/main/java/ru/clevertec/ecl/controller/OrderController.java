@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.clevertec.ecl.dto.OrderDto;
-import ru.clevertec.ecl.dto.SequenceDto;
 import ru.clevertec.ecl.service.OrderService;
 
 import static ru.clevertec.ecl.interceptor.common.UrlPaths.*;
@@ -101,11 +100,11 @@ public class OrderController {
     /**
      * Method sets order sequence to the specified value.
      *
-     * @param sequence value sequence must be set on
+     * @param value value sequence must be set on
      */
-    @PutMapping(value = ACTION_SET_SEQUENCE)
-    public void setSequenceNextValue(@RequestBody SequenceDto sequence) {
-        orderService.updateSequence(sequence.getValue());
+    @PostMapping(value = ACTION_SET_SEQUENCE)
+    public void setSequenceValue(@RequestBody Integer value) {
+        orderService.updateSequence(value);
     }
 
 }

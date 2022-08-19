@@ -1,29 +1,26 @@
 package ru.clevertec.ecl.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
+import org.postgresql.util.PSQLException;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.clevertec.ecl.dto.CertificateDto;
-import ru.clevertec.ecl.dto.OrderDto;
 import ru.clevertec.ecl.dto.TagDto;
-import ru.clevertec.ecl.entity.baseentities.Certificate;
-import ru.clevertec.ecl.entity.baseentities.Order;
 import ru.clevertec.ecl.entity.baseentities.Tag;
 import ru.clevertec.ecl.entity.commitlogentities.Action;
 import ru.clevertec.ecl.entity.commitlogentities.CommitLog;
 import ru.clevertec.ecl.exception.NotFoundException;
-import ru.clevertec.ecl.exception.UndefinedException;
 import ru.clevertec.ecl.interceptor.common.ClusterProperties;
 import ru.clevertec.ecl.mapper.TagMapper;
 import ru.clevertec.ecl.repository.entityrepository.TagRepository;
 import ru.clevertec.ecl.service.CertificateService;
 import ru.clevertec.ecl.service.TagService;
-import ru.clevertec.ecl.util.commitlog.CommitLogWorker;
+import ru.clevertec.ecl.service.commitlog.CommitLogService;
 
 import java.util.Set;
 
@@ -32,11 +29,10 @@ import static ru.clevertec.ecl.service.common.DatabaseConstants.ALIAS_TAGS;
 
 /**
  * Service class providing CRUD operations on {@link Tag}.
- *
+ * <p>
  * See also {@link AbstractService}, {@link TagService}.
  *
  * @author Olga Mailychko
- *
  */
 @Service
 public class TagServiceImpl
@@ -46,29 +42,27 @@ public class TagServiceImpl
     private final ClusterProperties clusterProperties;
     private final CertificateService certificateService;
     private final TagMapper mapper;
-    private final CommitLogWorker commitLogWorker;
+    private final CommitLogService commitLogService;
     private final ObjectMapper objectMapper;
 
     public TagServiceImpl(ClusterProperties properties, TagRepository repository,
                           @Lazy CertificateService certificateService, TagMapper mapper,
-                          CommitLogWorker commitLogWorker, ObjectMapper objectMapper) {
+                          CommitLogService commitLogService, ObjectMapper objectMapper) {
         super(properties, repository);
         this.clusterProperties = properties;
         this.certificateService = certificateService;
         this.mapper = mapper;
-        this.commitLogWorker = commitLogWorker;
+        this.commitLogService = commitLogService;
         this.objectMapper = objectMapper;
     }
 
-    @Transactional
-    @SneakyThrows
     @Override
     public TagDto save(TagDto toSave) {
         TagDto saved = mapper.tagToDto(repository.save(mapper.dtoToTag(toSave)));
-        CommitLog logNode = commitLogWorker.formLogNode(Action.SAVE,
-                objectMapper.writeValueAsString(saved),
+        CommitLog logNode = commitLogService.formLogNode(Action.SAVE,
+                saved,
                 ALIAS_TAGS);
-        commitLogWorker.writeAction(logNode);
+        commitLogService.writeAction(logNode);
         return saved;
     }
 
@@ -84,8 +78,6 @@ public class TagServiceImpl
         return repository.findAll(pageable).map(mapper::tagToDto);
     }
 
-    @Transactional
-    @SneakyThrows
     @Override
     public void delete(long id) {
         Tag requested = repository.findById(id).orElseThrow(() -> new NotFoundException(id));
@@ -96,23 +88,21 @@ public class TagServiceImpl
             certificateService.update(certificateDto);
         }
         repository.deleteById(id);
-        CommitLog logNode = commitLogWorker.formLogNode(Action.DELETE,
-                objectMapper.writeValueAsString(id),
+        CommitLog logNode = commitLogService.formLogNode(Action.DELETE,
+                mapper.tagToDto(requested),
                 ALIAS_TAGS);
-        commitLogWorker.writeAction(logNode);
+        commitLogService.writeAction(logNode);
     }
 
-    @Transactional
-    @SneakyThrows
     @Override
     public TagDto update(TagDto dto) {
         TagDto updated = repository.findById(dto.getId())
                 .map(found -> mapper.tagToDto(repository.save(mapper.dtoToTag(dto))))
                 .orElseThrow(NotFoundException::new);
-        CommitLog logNode = commitLogWorker.formLogNode(Action.UPDATE,
-                objectMapper.writeValueAsString(updated),
+        CommitLog logNode = commitLogService.formLogNode(Action.UPDATE,
+                updated,
                 ALIAS_TAGS);
-        commitLogWorker.writeAction(logNode);
+        commitLogService.writeAction(logNode);
         return updated;
     }
 
@@ -121,24 +111,6 @@ public class TagServiceImpl
         return repository.findByName(name)
                 .map(mapper::tagToDto)
                 .orElseThrow(NotFoundException::new);
-    }
-
-    @Override
-    @Transactional
-    public TagDto getOrSaveIfExists(TagDto tag) {
-        return repository.findById(tag.getId())
-                .map(mapper::tagToDto)
-                .orElseGet(() -> {
-                    CommitLog logNode = null;
-                    try {
-                        logNode = commitLogWorker
-                                .formLogNode(Action.SAVE, objectMapper.writeValueAsString(tag), ALIAS_TAGS);
-                    } catch (JsonProcessingException e) {
-                        throw new UndefinedException(e);
-                    }
-                    commitLogWorker.writeAction(logNode);
-                    return mapper.tagToDto(repository.save(mapper.dtoToTag(tag)));
-                });
     }
 
     @Override

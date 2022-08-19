@@ -5,6 +5,7 @@ import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.DynamicUpdate;
 
 import javax.persistence.*;
+import javax.validation.constraints.Positive;
 import java.time.LocalDateTime;
 
 /**
@@ -22,7 +23,7 @@ import java.time.LocalDateTime;
 @Entity
 @DynamicUpdate
 @Table(name = "commit_log")
-@EqualsAndHashCode(callSuper = false, exclude = {"actionTime", "performedOnNode"})
+@EqualsAndHashCode(callSuper = false, exclude = {"actionTime", "performedOnNode", "jsonValue"})
 @ToString
 public class CommitLog extends AbstractEntity {
     @Column
@@ -36,4 +37,7 @@ public class CommitLog extends AbstractEntity {
     private LocalDateTime actionTime;
     @Column
     private int performedOnNode;
+    @Column
+    @Positive
+    private long entityId;
 }

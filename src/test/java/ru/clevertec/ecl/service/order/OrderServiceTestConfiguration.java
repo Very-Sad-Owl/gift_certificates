@@ -14,7 +14,7 @@ import ru.clevertec.ecl.service.CertificateService;
 import ru.clevertec.ecl.service.OrderService;
 import ru.clevertec.ecl.service.UserService;
 import ru.clevertec.ecl.service.impl.OrderServiceImpl;
-import ru.clevertec.ecl.util.commitlog.CommitLogWorker;
+import ru.clevertec.ecl.service.commitlog.CommitLogService;
 
 @TestConfiguration
 @EnableConfigurationProperties(ClusterProperties.class)
@@ -24,9 +24,9 @@ public class OrderServiceTestConfiguration {
     @Bean
     public OrderService orderService(ClusterProperties properties, OrderRepository repository, OrderMapper mapper,
                                      CertificateMapper certificateMapper, UserMapper userMapper,
-                                     CertificateService certificateService, CommitLogWorker commitLogWorker,
+                                     CertificateService certificateService, CommitLogService commitLogService,
                                      ObjectMapper objectMapper, UserService userService) {
         return new OrderServiceImpl(properties, repository, mapper, certificateMapper, userMapper,
-                certificateService, commitLogWorker, objectMapper, userService);
+                certificateService, commitLogService, objectMapper, userService);
     }
 }

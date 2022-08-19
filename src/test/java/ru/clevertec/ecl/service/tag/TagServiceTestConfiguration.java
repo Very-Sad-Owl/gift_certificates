@@ -12,7 +12,7 @@ import ru.clevertec.ecl.repository.entityrepository.TagRepository;
 import ru.clevertec.ecl.service.CertificateService;
 import ru.clevertec.ecl.service.TagService;
 import ru.clevertec.ecl.service.impl.TagServiceImpl;
-import ru.clevertec.ecl.util.commitlog.CommitLogWorker;
+import ru.clevertec.ecl.service.commitlog.CommitLogService;
 
 @TestConfiguration
 @EnableConfigurationProperties(ClusterProperties.class)
@@ -21,8 +21,8 @@ public class TagServiceTestConfiguration {
 
     @Bean
     public TagService tagService(ClusterProperties props, TagRepository repo, TagMapper mapper,
-                                 CommitLogWorker commitLogWorker,
+                                 CommitLogService commitLogService,
                                  ObjectMapper om, @Lazy CertificateService certificateService) {
-        return new TagServiceImpl(props, repo, certificateService, mapper, commitLogWorker, om);
+        return new TagServiceImpl(props, repo, certificateService, mapper, commitLogService, om);
     }
 }

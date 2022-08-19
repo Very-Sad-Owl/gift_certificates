@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.context.MessageSource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -15,7 +16,6 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import ru.clevertec.ecl.interceptor.common.UrlPaths;
 
-import javax.validation.ConstraintViolationException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Locale;
@@ -56,6 +56,22 @@ public class GlobalDefaultExceptionHandler extends ResponseEntityExceptionHandle
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<?> badRequestHandler(ConstraintViolationException e, Locale locale) {
         String msg = messageProvider.getMessage("error.unique_constraint_violation", null, locale);
+        CustomStatusCode errorCode = CustomStatusCode.builder()
+                .errorCode(CustomStatusCode.CustomCode.CONSTRAINT_VIOLATION)
+                .build();
+        return createResponseEntity(HttpStatus.BAD_REQUEST, msg, errorCode, e);
+    }
+
+    /**
+     * Handler for {@link javax.validation.ConstraintViolationException} exception.
+     *
+     * @param e handled runtime exception
+     * @param locale current locale defined by user request's header
+     * @return {@link ResponseEntity} including HTTP status code and {@link ErrorResponse} object as body
+     */
+    @ExceptionHandler(javax.validation.ConstraintViolationException.class)
+    public ResponseEntity<?> validationHandler(javax.validation.ConstraintViolationException e, Locale locale) {
+        String msg = messageProvider.getMessage("error.constraint_violation", null, locale);
         CustomStatusCode errorCode = CustomStatusCode.builder()
                 .errorCode(CustomStatusCode.CustomCode.CONSTRAINT_VIOLATION)
                 .build();
@@ -106,6 +122,7 @@ public class GlobalDefaultExceptionHandler extends ResponseEntityExceptionHandle
         CustomStatusCode errorCode = CustomStatusCode.defineNotFoundCode(e.getStackTrace()[0].getClassName());
         return createResponseEntity(HttpStatus.NOT_FOUND, msg, errorCode, e);
     }
+
 
     /**
      * Handler for {@link UnsupportedOperationException} exception.
@@ -159,12 +176,11 @@ public class GlobalDefaultExceptionHandler extends ResponseEntityExceptionHandle
      * Handler for {@link HttpClientErrorException} exception.
      *
      * @param e handler runtime exception
-     * @param locale current locale defined by user request's header
      * @return {@link ResponseEntity} including HTTP status code and {@link ErrorResponse} object as body
      */
     @SneakyThrows
     @ExceptionHandler(HttpClientErrorException.class)
-    public ResponseEntity<?> handleXXException(HttpClientErrorException e, Locale locale) {
+    public ResponseEntity<?> handleRestException(HttpClientErrorException e) {
         String substring = e.getMessage().substring(7, e.getMessage().length() - 1);
         ErrorResponse errorResponse = objectMapper.readValue(substring, ErrorResponse.class);
         return ResponseEntity
