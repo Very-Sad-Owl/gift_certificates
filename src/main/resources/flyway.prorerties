@@ -1,5 +1,0 @@
-flyway.driver = 'org.postgresql.Driver'
-flyway.url = 'jdbc:postgresql://localhost:5432/bill'
-flyway.user = 'postgres'
-flyway.password = 'Osamu_720290'
-flyway.locations=filesystem:db/migration

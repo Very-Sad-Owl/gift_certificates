@@ -5,21 +5,23 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import ru.clevertec.ecl.dto.CertificateDto;
+import ru.clevertec.ecl.dto.CertificateFilterDto;
 import ru.clevertec.ecl.dto.TagDto;
-import ru.clevertec.ecl.entity.Certificate;
-import ru.clevertec.ecl.entity.Tag;
+import ru.clevertec.ecl.entity.baseentities.Certificate;
+import ru.clevertec.ecl.entity.baseentities.Tag;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
 @ExtendWith(SpringExtension.class)
-@EnableAutoConfiguration
+@ContextConfiguration(classes = {CertificateMapperImpl.class, TagMapperImpl.class})
 class CertificateMapperTest {
 
     @Autowired
@@ -107,6 +109,26 @@ class CertificateMapperTest {
 
         Certificate actual = mapper.dtoToCertificate(source);
 
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void dtoToFilter() {
+        CertificateDto source = CertificateDto.builder()
+                .id(1)
+                .name("name")
+                .description("xd")
+                .filteringTags(new HashSet<>(Arrays.asList("tagOne", "tagTwo")))
+                .build();
+
+        CertificateFilterDto expected = CertificateFilterDto.builder()
+                .name("name")
+                .description("xd")
+                .filteringTags(new HashSet<>(Arrays.asList("tagOne", "tagTwo")))
+                .build();
+
+        CertificateFilterDto actual = mapper.dtoToFilter(source);
+        
         assertEquals(expected, actual);
     }
 }

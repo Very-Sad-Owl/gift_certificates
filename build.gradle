@@ -3,10 +3,10 @@ plugins {
     id 'java'
     id 'maven-publish'
     id "io.freefair.lombok" version "5.3.0"
-    id "org.flywaydb.flyway" version "8.5.0"
     id 'org.springframework.boot' version '2.6.6'
     id "io.spring.dependency-management" version "1.0.8.RELEASE"
     id 'com.github.akazver.mapstruct' version '1.0.1'
+    id 'jacoco'
 }
 
 group = "ru.clevertec.ecl"
@@ -23,31 +23,36 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-web:2.6.6'
+    implementation 'org.springframework.boot:spring-boot-starter-web:2.6.7'
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa:2.6.6'
-    implementation 'com.h2database:h2:2.1.210'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa:2.6.7'
+    implementation 'org.springframework.boot:spring-boot-starter-validation:2.6.7'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator:2.6.7'
+    implementation 'org.springframework.boot:spring-boot-starter-jta-atomikos:2.6.7'
+
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.3'
+    implementation 'commons-dbcp:commons-dbcp:1.4'
+
+    implementation 'com.h2database:h2:2.1.212'
 
     compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.8'
     annotationProcessor 'org.projectlombok:lombok'
 
     implementation group: 'org.postgresql', name: 'postgresql', version: '42.3.2'
-
     annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 
     testImplementation('org.springframework.boot:spring-boot-starter-test')
-    // https://mvnrepository.com/artifact/com.h2database/h2
-    testImplementation 'com.h2database:h2:2.1.210'
+    testImplementation 'com.h2database:h2:2.1.212'
 
 
-//    // JUnit5
-//    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
-//    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
-//    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.8.2'
+    // JUnit5
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.8.2'
 //
-//    // Mockito
-//    testImplementation 'org.mockito:mockito-core:4.4.0'
-//    testImplementation 'org.mockito:mockito-junit-jupiter:4.4.0'
+    // Mockito
+    testImplementation 'org.mockito:mockito-core:4.4.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:4.4.0'
 
 }
 
@@ -68,16 +73,24 @@ tasks.withType(JavaCompile) {
 
 test {
     useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+jacocoTestReport {
+    dependsOn test
+
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    "ru/clevertec/ecl/util/commitlog/RestoreWorker.class",
+                    "ru/clevertec/ecl/interceptor/*",
+                    "ru/clevertec/ecl/entity/**",
+                    "ru/clevertec/ecl/dto/*",
+                    "ru/clevertec/ecl/App.class",
+                    "ru/clevertec/ecl/exception/*",
+                    "**/config/*"
+            ])
+        }))
+    }
 }
 
-flyway {
-    locations = ['filesystem:db/migration']
-    url = 'jdbc:postgresql://localhost:5432/certificate'
-    user = 'postgres'
-    password = 'Osamu_720290'
-    driver = 'org.postgresql.Driver'
-}
-
-flywayMigrate.dependsOn classes
-classes.finalizedBy flywayMigrate
 

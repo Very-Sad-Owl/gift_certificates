@@ -1,32 +1,21 @@
 package ru.clevertec.ecl.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
-import ru.clevertec.ecl.entity.Certificate;
+import lombok.experimental.SuperBuilder;
 
-import javax.persistence.*;
-import java.util.Set;
-
+/**
+ * DTO class for transfer {@link ru.clevertec.ecl.entity.baseentities.Tag} data.
+ *
+ * Transfers entity's field data between controller and repository layers.
+ *
+ * @author Olga Mailychko
+ *
+ */
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
-@EqualsAndHashCode(callSuper = true, exclude = "certificates")
+@SuperBuilder
+@EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public class TagDto extends AbstractModel {
     private String name;
-//    @JsonIgnore
-//    private Set<CertificateDto> certificates;
-
-//    @Builder
-//    public TagDto(long id, String name, Set<CertificateDto> certificates) {
-//        super(id);
-//        this.name = name;
-//        this.certificates = certificates;
-//    }
-
-    @Builder
-    public TagDto(long id, String name) {
-        super(id);
-        this.name = name;
-    }
 }

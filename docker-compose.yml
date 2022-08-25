@@ -1,0 +1,56 @@
+version: '3'
+
+services:
+
+  postgres:
+    container_name: postgres_container
+    image: postgres:13.1-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "Osamu_720290"
+      POSTGRES_DB: "commit_log"
+
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./docker_postgres_init.sql:/docker-entrypoint-initdb.d/docker_postgres_init.sql
+
+  node8070:
+    image: gift-certificates-api:latest
+    depends_on:
+      - postgres
+    environment:
+      HOST: "node"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres/node8070
+      SPRING_DATASOURCE_LOG_URL: jdbc:postgresql://postgres/commit_log
+      PORT: 8070
+      DDL: 'update'
+    ports:
+      - "8070:8070"
+
+  node8080:
+    image: gift-certificates-api:latest
+    depends_on:
+      - postgres
+    environment:
+      HOST: "node"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres/node8080
+      SPRING_DATASOURCE_LOG_URL: jdbc:postgresql://postgres/commit_log
+      PORT: 8080
+      DDL: 'update'
+    ports:
+      - "8080:8080"
+
+  node8090:
+    image: gift-certificates-api:latest
+    depends_on:
+      - postgres
+    environment:
+      HOST: "node"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres/node8090
+      SPRING_DATASOURCE_LOG_URL: jdbc:postgresql://postgres/commit_log
+      PORT: 8090
+      DDL: 'update'
+    ports:
+      - "8090:8090"

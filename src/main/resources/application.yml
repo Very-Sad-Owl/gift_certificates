@@ -1,15 +1,47 @@
 spring:
-  #  jpa:
-  #    hibernate:
-  #      ddl-auto: create
-
   datasource:
-    url: jdbc:postgresql://localhost:5432/certificate?useSSL=true&serverTimezone=UTC
-    username: postgres
-    password: Osamu_720290
-    driver-class-name: org.postgresql.Driver
+      orders:
+        url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/node${PORT}}?useSSL=true&serverTimezone=UTC
+        username: postgres
+        password: Osamu_720290
+        driverClassName: org.postgresql.Driver
+      commitlog:
+        url: ${SPRING_DATASOURCE_LOG_URL:jdbc:postgresql://localhost:5432/commit_log}?useSSL=true&serverTimezone=UTC
+        username: postgres
+        password: Osamu_720290
+        driverClassName: org.postgresql.Driver
+        continue-on-error: true
 
-#pagination:
-#  default:
-#    pageSize: 10
-#    pageNumber: 0
+  jpa:
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: ${DDL:none}
+    show-sql: true
+    database: postgresql
+  sql:
+    init:
+      platform: postgresql
+      mode: always
+
+server:
+  host: ${HOST:localhost}
+  port: ${PORT}
+  sourcesPort: 8070, 8080, 8090
+  replicas:
+    8070: 8071, 8072
+    8080: 8081, 8082
+    8090: 8091, 8092
+  cluster:
+    8070: 8070, 8071, 8072
+    8080: 8080, 8081, 8082
+    8090: 8090, 8091, 8092
+
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+

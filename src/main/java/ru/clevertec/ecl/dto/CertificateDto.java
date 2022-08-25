@@ -1,37 +1,44 @@
 package ru.clevertec.ecl.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.*;
-import ru.clevertec.ecl.entity.Tag;
+import lombok.experimental.SuperBuilder;
 
-import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.Set;
 
+/**
+ * DTO class for transfer {@link ru.clevertec.ecl.entity.baseentities.Certificate} data.
+ *
+ * Transfers entity's field data between controller and repository layers.
+ *
+ * @author Olga Mailychko
+ *
+ */
 @Data
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true, exclude = {"lastUpdateDate", "createDate", "filteringTag"})
+@SuperBuilder(toBuilder = true)
+@EqualsAndHashCode(callSuper = true, exclude = {"lastUpdateDate", "createDate", "filteringTags"})
 @ToString(callSuper = true)
 public class CertificateDto extends AbstractModel {
     private String name;
     private String description;
     private double price;
     private Integer duration;
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createDate;
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime lastUpdateDate;
     private Set<TagDto> tags;
-
-    private String filteringTag;
-
-    @Builder
-    public CertificateDto(long id, String name, String description, double price, Integer duration, LocalDateTime createDate, LocalDateTime lastUpdateDate, Set<TagDto> tags, String filteringTag) {
-        super(id);
-        this.name = name;
-        this.description = description;
-        this.price = price;
-        this.duration = duration;
-        this.createDate = createDate;
-        this.lastUpdateDate = lastUpdateDate;
-        this.tags = tags;
-        this.filteringTag = filteringTag;
-    }
+    @JsonIgnore
+    private Set<String> filteringTags;
 }
